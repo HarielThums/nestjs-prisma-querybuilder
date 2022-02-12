@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { validateOrReject } from 'class-validator';
 
-export default async function validateOrRejectPadrao(data): Promise<void> {
+export default async function defaultValidateOrReject(data) {
   await validateOrReject(data).catch((errors) => {
     const errMessages = [];
 
@@ -12,16 +12,14 @@ export default async function validateOrRejectPadrao(data): Promise<void> {
         let children = err.children;
 
         do {
-          /*
-            tentantar transformar eses forEach em uma função recursiva, se ouver outro children chama ela de novo, se houver constraints para.
-          */
-          children.forEach((childrenFilho) => {
-            childrenFilho?.children.forEach((childrenFilhoDoFilho) => {
-              Object.values(childrenFilhoDoFilho?.constraints).forEach((val) => errMessages.push(val));
-              children = childrenFilho.children;
+          children.forEach((grandchild) => {
+            grandchild.children.forEach((greatGrandson) => {
+              Object.values(greatGrandson?.constraints).forEach((val) => errMessages.push(val));
+
+              children = grandchild.children;
             });
           });
-        } while (children?.children);
+        } while (children.children);
       }
     });
 
