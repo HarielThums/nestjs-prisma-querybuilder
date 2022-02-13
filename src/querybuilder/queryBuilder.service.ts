@@ -1,4 +1,4 @@
-import { Global, HttpException, Inject, Injectable } from '@nestjs/common';
+import { Global, Inject, Injectable } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { plainToClass } from 'class-transformer';
 import { Request } from 'express';
@@ -13,19 +13,15 @@ export class Querybuilder {
   constructor(@Inject(REQUEST) private readonly request: Request) {}
 
   async query(): Promise<QueryResponse> {
-    try {
-      const queryValidator = defaultPlainToClass(QueryValidator, this.request.query);
+    const queryValidator = defaultPlainToClass(QueryValidator, this.request.query);
 
-      await defaultValidateOrReject(queryValidator);
+    await defaultValidateOrReject(queryValidator);
 
-      const query = this.buildQuery(queryValidator);
+    const query = this.buildQuery(queryValidator);
 
-      // await this.setCount(model, query.where);
+    // await this.setCount(model, query.where);
 
-      return query;
-    } catch (err) {
-      throw new HttpException(err.response, err.response.statusCode);
-    }
+    return query;
   }
 
   // private async setCount(model: string, where = {}) {
