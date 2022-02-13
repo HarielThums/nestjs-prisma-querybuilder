@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { Global, HttpException, Inject, Injectable } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { plainToClass } from 'class-transformer';
 import { Request } from 'express';
@@ -6,13 +6,13 @@ import { defaultPlainToClass } from '../functions/plainToClass.fn';
 import defaultValidateOrReject from '../functions/validateOrReject.fn';
 import { QueryResponse } from './dto/queryResponse.dto';
 import { FilterFields, PopulateFields, QueryValidator } from './dto/queryValidator.dto';
-import { PrismaService } from './prisma.service';
 
+@Global()
 @Injectable()
 export class Querybuilder {
-  constructor(private readonly prisma: PrismaService, @Inject(REQUEST) private readonly request: Request) {}
+  constructor(@Inject(REQUEST) private readonly request: Request) {}
 
-  async query(model: string): Promise<QueryResponse> {
+  async query(): Promise<QueryResponse> {
     try {
       const queryValidator = defaultPlainToClass(QueryValidator, this.request.query);
 
@@ -20,7 +20,7 @@ export class Querybuilder {
 
       const query = this.buildQuery(queryValidator);
 
-      await this.setCount(model, query.where);
+      // await this.setCount(model, query.where);
 
       return query;
     } catch (err) {
@@ -28,13 +28,13 @@ export class Querybuilder {
     }
   }
 
-  private async setCount(model: string, where = {}) {
-    const count = await this.prisma[model].count({ where }).catch(() => {
-      throw new HttpException({ statusCode: 500, message: 'Prisma error on Querybuilder, check your query and types' }, HttpStatus.INTERNAL_SERVER_ERROR);
-    });
+  // private async setCount(model: string, where = {}) {
+  //   const count = await model.count({ where }).catch(() => {
+  //     throw new HttpException({ statusCode: 500, message: 'Prisma error on Querybuilder, check your query and types' }, HttpStatus.INTERNAL_SERVER_ERROR);
+  //   });
 
-    this.request.res.setHeader('count', count);
-  }
+  //   this.request.res.setHeader('count', count);
+  // }
 
   private buildQuery(query) {
     query.page = Number(query.page) > 0 ? Number(query.page) : 1;
