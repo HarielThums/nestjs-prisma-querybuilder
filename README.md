@@ -1,12 +1,8 @@
 # Nestjs/prisma-querybuilder
 
-# 
 
 ![https://nestjs.com/img/logo_text.svg](https://nestjs.com/img/logo_text.svg)
 
-https://nestjs.com/img/logo_text.svg
-
-## Nestjs/Prisma Querybuilder
 
 - **Como instalar?**
     - `npm i @nestjs/prisma-query-builder`
