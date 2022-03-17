@@ -57,6 +57,10 @@ export class PopulateFields {
   @IsString()
   @IsNotEmpty()
   select: string;
+
+  @Expose()
+  @Type(() => PopulateFields)
+  populate: PopulateFields[];
 }
 
 export class FilterFields {
