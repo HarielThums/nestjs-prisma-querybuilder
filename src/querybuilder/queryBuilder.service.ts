@@ -19,18 +19,8 @@ export class Querybuilder {
 
     const query = this.buildQuery(queryValidator);
 
-    // await this.setCount(model, query.where);
-
     return query;
   }
-
-  // private async setCount(model: string, where = {}) {
-  //   const count = await model.count({ where }).catch(() => {
-  //     throw new HttpException({ statusCode: 500, message: 'Prisma error on Querybuilder, check your query and types' }, HttpStatus.INTERNAL_SERVER_ERROR);
-  //   });
-
-  //   this.request.res.setHeader('count', count);
-  // }
 
   private buildQuery(query) {
     query.page = Number(query.page) > 0 ? Number(query.page) : 1;
@@ -78,15 +68,29 @@ export class Querybuilder {
         select[value.path] = {};
 
         select[value.path]['select'] = { id: true };
+
+        if (value.populate) {
+          value.populate.forEach((valueInside: PopulateFields) => {
+            select[value.path]['select'][valueInside.path] = {};
+
+            select[value.path]['select'][valueInside.path]['select'] = { id: true };
+          });
+        }
       });
 
       populate.forEach((value: PopulateFields, index) => {
-        if (!populate[index].select) {
-          select[value.path]['select'] = { id: true };
-        } else if (populate[index].select) {
+        if (populate[index].select) {
           populate[index].select.split(' ').map((v: string) => {
             select[value.path]['select'][v] = true;
           });
+
+          if (populate[index].populate) {
+            populate[index].populate.forEach((valueInside: PopulateFields) => {
+              valueInside.select.split(' ').map((v: string) => {
+                select[value.path]['select'][valueInside.path]['select'][v] = true;
+              });
+            });
+          }
         }
       });
 
