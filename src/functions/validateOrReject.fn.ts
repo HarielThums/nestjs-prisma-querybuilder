@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { validateOrReject } from 'class-validator';
 
 export default async function defaultValidateOrReject(data) {
@@ -23,6 +23,6 @@ export default async function defaultValidateOrReject(data) {
       }
     });
 
-    throw new HttpException({ statusCode: 400, message: errMessages }, HttpStatus.BAD_REQUEST);
+    throw new BadRequestException({ statusCode: 400, message: errMessages });
   });
 }
