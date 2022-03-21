@@ -6,14 +6,14 @@
 
 - **Como instalar?**
 
-  - `npm i @nestjs/prisma-query-builder`
+  - `npm i nestjs-prisma-querybuilder`
   - No seu app.module inclua o `Querybuilder` aos providers:
 
     - `PrismaService` é o **seu** service, para ver como criar ele leia a documentação [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services)];
 
     ```tsx
     // app.module
-    import { Querybuilder } from '@nestjs/prisma-query-builder';
+    import { Querybuilder } from 'nestjs-prisma-querybuilder';
 
     providers: [PrismaService, QuerybuilderService, Querybuilder],
     ```
@@ -23,7 +23,7 @@
     ```tsx
     import { BadRequestException, Inject, Injectable } from '@nestjs/common';
     import { REQUEST } from '@nestjs/core';
-    import { Querybuilder } from '@nestjs/prisma-query-builder';
+    import { Querybuilder } from 'nestjs-prisma-querybuilder';
     import { Request } from 'express';
     import { PrismaService } from 'src/prisma.service';
 
@@ -64,9 +64,7 @@
 
   - Adicione o Querybuilder no seu service:
 
-    ```jsx
-    import { Querybuilder } from '@nestjs/prisma-query-builder';
-
+    ```tsx
     // service
     constructor(private readonly prisma: PrismaService, private readonly qb: QuerybuilderService) {}
     ```
