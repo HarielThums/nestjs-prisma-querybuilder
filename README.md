@@ -144,4 +144,9 @@
 
 </br>
 
+- Repositório de exemplo:
+  - https://github.com/HarielThums/nestjs-prisma-querybuilder-exemple
+
+</br>
+
 - Nestjs/Prisma Querybuilder is [MIT licensed](LICENSE).
