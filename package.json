@@ -1,19 +1,22 @@
 {
   "name": "@nestjs/prisma-query-builder",
   "author": "Hariel Thums <hariel@hotmail.com>",
-  "readmeFilename": "README.md",
   "version": "1.0.0",
   "license": "MIT",
   "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "homepage": "https://github.com/HarielThums/nestjs-prisma-query-builder#readme",
   "files": [
     "dist/**/*",
     "*.md"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/HarielThums/nestjs-prisma-query-builder"
+    "url": "git+https://github.com/HarielThums/nestjs-prisma-query-builder.git"
   },
-  "bugs": "https://github.com/HarielThums/nestjs-prisma-query-builder/issues",
+  "bugs": {
+    "url": "https://github.com/HarielThums/nestjs-prisma-query-builder/issues"
+  },
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
