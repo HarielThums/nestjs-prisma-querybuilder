@@ -1,5 +1,5 @@
 {
-  "name": "@nestjs/prisma-querybuilder",
+  "name": "nestjs-prisma-querybuilder",
   "author": "Hariel Thums <hariel@hotmail.com>",
   "version": "0.0.1",
   "license": "MIT",
