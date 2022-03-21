@@ -1,7 +1,7 @@
 {
   "name": "nestjs-prisma-querybuilder",
   "author": "Hariel Thums <hariel@hotmail.com>",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "description": "#",
   "main": "dist/index.js",
