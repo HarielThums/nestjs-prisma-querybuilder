@@ -3,6 +3,7 @@
   "author": "Hariel Thums <hariel@hotmail.com>",
   "version": "1.0.0",
   "license": "MIT",
+  "description": "#",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
   "homepage": "https://github.com/HarielThums/nestjs-prisma-query-builder#readme",
