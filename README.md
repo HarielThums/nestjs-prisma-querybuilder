@@ -9,7 +9,6 @@
 - [Português](#português)
 - [English](#english)
 
-## <br/>
 
 ### English
 
