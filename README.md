@@ -6,7 +6,7 @@
 
 ### Documentação / Documentation
 
-- [Portugues](#português)
+- [Português](#português)
 - [English](#english)
 
 ## <br/>
