@@ -12,17 +12,17 @@ import { FilterFields, PopulateFields, QueryValidator } from './dto/queryValidat
 export class Querybuilder {
   constructor(@Inject(REQUEST) private readonly request: Request) {}
 
-  async query(): Promise<QueryResponse> {
+  async query(autoSelectId = true): Promise<QueryResponse> {
     const queryValidator = defaultPlainToClass(QueryValidator, this.request.query);
 
     await defaultValidateOrReject(queryValidator);
 
-    const query = this.buildQuery(queryValidator);
+    const query = this.buildQuery(queryValidator, autoSelectId);
 
     return query;
   }
 
-  private buildQuery(query) {
+  private buildQuery(query, autoSelectId: boolean) {
     query.page = Number(query.page) > 0 ? Number(query.page) : 1;
     query.limit = Number(query.limit) > 0 ? Number(query.limit) : 10;
 
@@ -67,13 +67,21 @@ export class Querybuilder {
       populate.forEach((value: PopulateFields) => {
         select[value.path] = {};
 
-        select[value.path]['select'] = { id: true };
+        if (autoSelectId) {
+          select[value.path]['select'] = { id: true };
+        } else {
+          select[value.path]['select'] = {};
+        }
 
         if (value.populate) {
           value.populate.forEach((valueInside: PopulateFields) => {
             select[value.path]['select'][valueInside.path] = {};
 
-            select[value.path]['select'][valueInside.path]['select'] = { id: true };
+            if (autoSelectId) {
+              select[value.path]['select'][valueInside.path]['select'] = { id: true };
+            } else {
+              select[value.path]['select'][valueInside.path]['select'] = {};
+            }
           });
         }
       });
@@ -149,7 +157,7 @@ export class Querybuilder {
       delete query.operator;
     }
 
-    query.select = { id: true, ...query.select };
+    if (autoSelectId) query.select = { id: true, ...query.select };
 
     return plainToClass(QueryResponse, query);
   }
