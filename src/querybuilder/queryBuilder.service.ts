@@ -12,17 +12,17 @@ import { FilterFields, PopulateFields, QueryValidator } from './dto/queryValidat
 export class Querybuilder {
   constructor(@Inject(REQUEST) private readonly request: Request) {}
 
-  async query(autoSelectId = true): Promise<QueryResponse> {
+  async query(primaryKey = 'id'): Promise<QueryResponse> {
     const queryValidator = defaultPlainToClass(QueryValidator, this.request.query);
 
     await defaultValidateOrReject(queryValidator);
 
-    const query = this.buildQuery(queryValidator, autoSelectId);
+    const query = this.buildQuery(queryValidator, primaryKey);
 
     return query;
   }
 
-  private buildQuery(query, autoSelectId: boolean) {
+  private buildQuery(query, primaryKey: string) {
     query.page = Number(query.page) > 0 ? Number(query.page) : 1;
     query.limit = Number(query.limit) > 0 ? Number(query.limit) : 10;
 
@@ -67,21 +67,13 @@ export class Querybuilder {
       populate.forEach((value: PopulateFields) => {
         select[value.path] = {};
 
-        if (autoSelectId) {
-          select[value.path]['select'] = { id: true };
-        } else {
-          select[value.path]['select'] = {};
-        }
+        select[value.path]['select'] = { [primaryKey]: true };
 
         if (value.populate) {
           value.populate.forEach((valueInside: PopulateFields) => {
             select[value.path]['select'][valueInside.path] = {};
 
-            if (autoSelectId) {
-              select[value.path]['select'][valueInside.path]['select'] = { id: true };
-            } else {
-              select[value.path]['select'][valueInside.path]['select'] = {};
-            }
+            select[value.path]['select'][valueInside.path]['select'] = { [primaryKey]: true };
           });
         }
       });
@@ -157,7 +149,7 @@ export class Querybuilder {
       delete query.operator;
     }
 
-    if (autoSelectId) query.select = { id: true, ...query.select };
+    query.select = { [primaryKey]: true, ...query.select };
 
     return plainToClass(QueryResponse, query);
   }
