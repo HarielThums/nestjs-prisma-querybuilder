@@ -59,16 +59,6 @@ export class Querybuilder {
       query.select = select;
     }
 
-    // if (query.include) {
-    //   const include = {};
-
-    //   query.include.split(' ').map((v: string) => {
-    //     include[v] = true;
-    //   });
-
-    //   query.include = include;
-    // }
-
     if (query.populate) {
       const select = {};
 
@@ -159,10 +149,23 @@ export class Querybuilder {
       delete query.operator;
     }
 
+    // not working yet;
+    // not working yet;
+    // not working yet;
+    if (query.include) {
+      const include = {};
+
+      query.include.split(' ').map((v: string) => {
+        include[v] = true;
+      });
+
+      query.include = include;
+    }
+
     query.select = { [primaryKey]: true, ...query.select };
 
-    if (query.select.include('all')) delete query.select;
+    if (query.select.hasOwnProperty('all')) delete query.select;
 
-    return plainToClass(QueryResponse, query);
+    return plainToClass(QueryResponse, query, { excludeExtraneousValues: true });
   }
 }
