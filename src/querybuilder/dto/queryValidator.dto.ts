@@ -31,6 +31,12 @@ export class QueryValidator {
   @Expose()
   select: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @Expose()
+  include: string;
+
   @Expose()
   @Type(() => PopulateFields)
   @ValidateNested({ each: true })

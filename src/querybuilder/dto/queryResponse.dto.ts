@@ -15,4 +15,7 @@ export class QueryResponse {
 
   @Expose()
   take: any;
+
+  @Expose()
+  include: any;
 }

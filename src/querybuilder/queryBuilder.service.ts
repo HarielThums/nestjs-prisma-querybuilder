@@ -59,6 +59,16 @@ export class Querybuilder {
       query.select = select;
     }
 
+    if (query.include) {
+      const include = {};
+
+      query.include.split(' ').map((v: string) => {
+        include[v] = true;
+      });
+
+      query.include = include;
+    }
+
     if (query.populate) {
       const select = {};
 
