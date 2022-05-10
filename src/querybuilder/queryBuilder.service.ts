@@ -161,6 +161,8 @@ export class Querybuilder {
 
     query.select = { [primaryKey]: true, ...query.select };
 
+    if (query.select.include('all')) delete query.select;
+
     return plainToClass(QueryResponse, query);
   }
 }
