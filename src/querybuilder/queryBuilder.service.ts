@@ -121,7 +121,7 @@ export class Querybuilder {
               break;
             }
             case 'number': {
-              value.value = parseInt(value.value);
+              value.value = Number(value.value);
               break;
             }
           }

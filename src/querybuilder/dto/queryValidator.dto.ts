@@ -31,6 +31,7 @@ export class QueryValidator {
   @Expose()
   select: string;
 
+  // don't work yet;
   @IsString()
   @IsNotEmpty()
   @IsOptional()
