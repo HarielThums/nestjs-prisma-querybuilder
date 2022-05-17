@@ -1,5 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateIf, ValidateNested } from 'class-validator';
+import { FilterFields } from './filterFields.dto';
+import { PopulateFields } from './populateFields.dto';
 
 export class QueryValidator {
   @IsEnum(['asc', 'desc'])
@@ -52,42 +54,4 @@ export class QueryValidator {
   @Type(() => FilterFields)
   @ValidateNested({ each: true })
   filter: FilterFields[];
-}
-
-export class PopulateFields {
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  path: string;
-
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  select: string;
-
-  @Expose()
-  @Type(() => PopulateFields)
-  populate: PopulateFields[];
-}
-
-export class FilterFields {
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  path: string;
-
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  value: any;
-
-  @Expose()
-  @IsEnum(['string', 'boolean', 'number', 'date'])
-  @IsOptional()
-  type: string;
-
-  @Expose()
-  @IsEnum(['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn'])
-  @IsOptional()
-  operator: string;
 }

@@ -4,8 +4,10 @@ import { plainToClass } from 'class-transformer';
 import { Request } from 'express';
 import { defaultPlainToClass } from '../functions/plainToClass.fn';
 import defaultValidateOrReject from '../functions/validateOrReject.fn';
+import { FilterFields } from './dto/filterFields.dto';
+import { PopulateFields } from './dto/populateFields.dto';
 import { QueryResponse } from './dto/queryResponse.dto';
-import { FilterFields, PopulateFields, QueryValidator } from './dto/queryValidator.dto';
+import { QueryValidator } from './dto/queryValidator.dto';
 
 @Global()
 @Injectable()
