@@ -16,8 +16,7 @@
 - `npm i nestjs-prisma-querybuilder`
 - In your app.module include `Querybuilder` to providers
 
-  - `PrismaService` is your serive, to check how know create it read the documentation
-  - [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services)];
+  - `PrismaService` is your serive, to check how know create it read the documentation [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services);
 
   ```tsx
   // app.module
@@ -167,7 +166,7 @@
 - `npm i nestjs-prisma-querybuilder`
 - No seu app.module inclua o `Querybuilder` aos providers:
 
-  - `PrismaService` é o **seu** service, para ver como criar ele leia a documentação [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services)];
+  - `PrismaService` é o **seu** service, para ver como criar ele leia a documentação [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services);
 
   ```tsx
   // app.module
