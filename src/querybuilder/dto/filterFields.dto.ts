@@ -15,10 +15,10 @@ export class FilterFields {
   @Expose()
   @IsEnum(['string', 'boolean', 'number', 'date'])
   @IsOptional()
-  type: string;
+  type: 'string' | 'boolean' | 'number' | 'date';
 
   @Expose()
   @IsEnum(['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn'])
   @IsOptional()
-  operator: string;
+  operator: 'contains' | 'endsWith' | 'startsWith' | 'equals' | 'gt' | 'gte' | 'in' | 'lt' | 'lte' | 'not' | 'notIn';
 }

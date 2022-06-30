@@ -5,9 +5,6 @@ export class QueryResponse {
   where: any;
 
   @Expose()
-  select: any;
-
-  @Expose()
   orderBy: any;
 
   @Expose()
@@ -16,6 +13,9 @@ export class QueryResponse {
   @Expose()
   take: any;
 
-  // @Expose()
-  // include: any;
+  @Expose()
+  select?: any;
+
+  @Expose()
+  include?: any;
 }

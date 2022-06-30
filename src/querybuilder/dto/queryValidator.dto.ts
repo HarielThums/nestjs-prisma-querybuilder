@@ -7,7 +7,7 @@ export class QueryValidator {
   @IsEnum(['asc', 'desc'])
   @IsOptional()
   @Expose()
-  sort: string;
+  sort: 'asc' | 'desc';
 
   @IsString()
   @IsNotEmpty()
@@ -33,13 +33,6 @@ export class QueryValidator {
   @Expose()
   select: string;
 
-  // don't work yet;
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  @Expose()
-  include: string;
-
   @Expose()
   @Type(() => PopulateFields)
   @ValidateNested({ each: true })
@@ -48,7 +41,7 @@ export class QueryValidator {
   @Expose()
   @IsEnum(['and', 'not', 'or'])
   @IsOptional()
-  operator: string;
+  operator: 'and' | 'not' | 'or';
 
   @Expose()
   @Type(() => FilterFields)

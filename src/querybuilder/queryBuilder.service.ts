@@ -98,7 +98,13 @@ export class Querybuilder {
 
       delete query.populate;
 
-      query.select = { ...query.select, ...select };
+      if (query.select.hasOwnProperty('all')) {
+        query.include = {};
+
+        query.include = { ...select };
+      } else {
+        query.select = { ...query.select, ...select };
+      }
     }
 
     if (query.filter) {
@@ -149,19 +155,6 @@ export class Querybuilder {
 
     if (query.operator) {
       delete query.operator;
-    }
-
-    // not working yet;
-    // not working yet;
-    // not working yet;
-    if (query.include) {
-      const include = {};
-
-      query.include.split(' ').map((v: string) => {
-        include[v] = true;
-      });
-
-      query.include = include;
     }
 
     query.select = { [primaryKey]: true, ...query.select };
