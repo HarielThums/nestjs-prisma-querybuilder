@@ -9,11 +9,6 @@
 - [Português](#português)
 - [English](#english)
 
-
-**You can use this frontend interface to make your queries easier -- [Nestjs prisma querybuilder interface](https://www.npmjs.com/package/nestjs-prisma-querybuilder-interface)**
-
-**Você pode usar essa interface para tornar suas queries mais fácies no frontend -- [Nestjs prisma querybuilder interface](https://www.npmjs.com/package/nestjs-prisma-querybuilder-interface)**
-
 ### English
 
 - **How to install it?**
@@ -62,6 +57,8 @@
   ```
 
 - **How to use it?**
+
+  **You can use this frontend interface to make your queries easier -- [Nestjs prisma querybuilder interface](https://www.npmjs.com/package/nestjs-prisma-querybuilder-interface)**
 
   - Append your QuebruilderService in any service:
     ```tsx
@@ -222,6 +219,9 @@
     ```
 
 - **Como usar?**
+
+  **Você pode usar essa interface para tornar suas queries mais fácies no frontend -- [Nestjs prisma querybuilder interface](https://www.npmjs.com/package/nestjs-prisma-querybuilder-interface)**
+
 
   - Adicione o Querybuilder no seu service:
     ```tsx
