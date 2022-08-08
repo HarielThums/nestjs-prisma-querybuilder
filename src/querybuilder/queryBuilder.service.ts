@@ -14,6 +14,13 @@ import { QueryValidator } from './dto/queryValidator.dto';
 export class Querybuilder {
   constructor(@Inject(REQUEST) private readonly request: Request) {}
 
+  /**
+   *
+   *
+   * @param primaryKey PrimaryKey from model selected, default is '_id_'
+   * @returns {Promise<QueryResponse>} This will return your query to prisma
+   * @seemore https://github.com/HarielThums/nestjs-prisma-querybuilder
+   */
   async query(primaryKey = 'id'): Promise<QueryResponse> {
     const queryValidator = defaultPlainToClass(QueryValidator, this.request.query);
 
@@ -69,13 +76,13 @@ export class Querybuilder {
       populate.forEach((value: PopulateFields) => {
         select[value.path] = {};
 
-        select[value.path]['select'] = { [primaryKey]: true };
+        select[value.path]['select'] = { [value.primaryKey]: true };
 
         if (value.populate) {
           value.populate.forEach((valueInside: PopulateFields) => {
             select[value.path]['select'][valueInside.path] = {};
 
-            select[value.path]['select'][valueInside.path]['select'] = { [primaryKey]: true };
+            select[value.path]['select'][valueInside.path]['select'] = { [value.primaryKey]: true };
           });
         }
       });
@@ -153,9 +160,7 @@ export class Querybuilder {
       query.where = { ...where };
     }
 
-    if (query.operator) {
-      delete query.operator;
-    }
+    if (query.operator) delete query.operator;
 
     query.select = { [primaryKey]: true, ...query.select };
 
