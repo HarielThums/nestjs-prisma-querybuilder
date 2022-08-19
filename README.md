@@ -37,13 +37,28 @@
   export class QuerybuilderService {
     constructor(@Inject(REQUEST) private readonly request: Request, private readonly querybuilder: Querybuilder, private readonly prisma: PrismaService) {}
 
-    async query(model: string) {
+    /**
+     *
+     * @param model model name on schema.prisma;
+     * @param primaryKey primaryKey name for this model on prisma.schema;
+     * @param where object to 'where' using the prisma rules;
+     * @param mergeWhere define if the previous where will be merged with the query where or replace that;
+     * @param onlyPaginate remove any 'select' and 'populate' of the query
+     */
+    async query(model: string, primaryKey?: string, where?: any, mergeWhere = false, onlyPaginate = false) {
       return this.querybuilder
-        .query()
+        .query(primaryKey)
         .then(async (query) => {
+          if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
+
           const count = await this.prisma[model].count({ where: query.where });
 
           this.request.res.setHeader('count', count);
+
+          if (onlyPaginate) {
+            delete query.include;
+            delete query.select;
+          }
 
           return query;
         })
@@ -140,6 +155,7 @@
     - Populate is an array and that allows you to select in the fields of relationships, him need two parameters **`path`** and **`select`;**
     - `path` is the relationship reference (ex: author);
     - `select` are the fields that will be returned;
+    - `primaryKey` is the reference to primary key of the relationship **optional** (default: 'id');
     - The populate index is needed to link the properties `path` and `select`;
     - `http://localhost:3000/posts?populate[0][path]=author&populate[0][select]=name email`
   - Filter
@@ -147,7 +163,7 @@
     - `path` is a reference from the property that will applied the filter;
     - `value` is the value that will be filtered;
     - `operator` (needs to be used if value don't is a **string**)
-    - `operator` (optional) can be used to personalize your filter;
+    - `operator` can be used to personalize your filter **optional**;
       - accepted types:: `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn']`
     - `type` needs to be used if value don't is a **string;**
       - accepted types: `['string', 'boolean', 'number', 'date']`
@@ -189,13 +205,28 @@
   export class QuerybuilderService {
     constructor(@Inject(REQUEST) private readonly request: Request, private readonly querybuilder: Querybuilder, private readonly prisma: PrismaService) {}
 
-    async query(model: string) {
+    /**
+     *
+     * @param model nome do model no schema.prisma;
+     * @param primaryKey nome da chave primaria deste model no prisma.schema;
+     * @param where objeto para where de acordo com as regras do prisma;
+     * @param mergeWhere define se o where informado no parâmetro anterior será unido ou substituirá um possivel where vindo da query;
+     * @param onlyPaginate remove qualquer 'select' e 'populate' da query;
+     */
+    async query(model: string, primaryKey?: string, where?: any, mergeWhere = false, onlyPaginate = false) {
       return this.querybuilder
-        .query()
+        .query(primaryKey)
         .then(async (query) => {
+          if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
+
           const count = await this.prisma[model].count({ where: query.where });
 
           this.request.res.setHeader('count', count);
+
+          if (onlyPaginate) {
+            delete query.include;
+            delete query.select;
+          }
 
           return query;
         })
@@ -208,7 +239,7 @@
   }
   ```
 
-- Optional: Você pode adicionar uma validação adicional para o parametro `model`, mas essa validação vai variar de acordo com o seu database;
+- **Optional**: Você pode adicionar uma validação adicional para o parametro `model`, mas essa validação vai variar de acordo com o seu database;
 
   - Exemplo com `SQLite`
 
@@ -221,7 +252,6 @@
 - **Como usar?**
 
   **Você pode usar essa interface para tornar suas queries mais fácies no frontend -- [Nestjs prisma querybuilder interface](https://www.npmjs.com/package/nestjs-prisma-querybuilder-interface)**
-
 
   - Adicione o Querybuilder no seu service:
     ```tsx
@@ -303,13 +333,14 @@
     - Populate é um array que permite dar select nos campos dos relacionamentos, é composto por 2 parametros, **path** e **select**;
     - `path` é a referencia para qual relacionamento será populado;
     - `select` são os campos que irão serem retornados;
+    - `primaryKey` nome da chave primaria do relacionamento **opcional** (default: 'id');
     - Podem ser feitos todos os populates necessários usando o índice \*\*\*\*do array para ligar o path ao select;
     - `http://localhost:3000/posts?populate[0][path]=author&populate[0][select]=name email`
   - Filter
     - Pode ser usado para filtrar a consulta com os parâmetros desejados;
     - `path` é a referencia para qual propriedade irá aplicar o filtro;
     - `value` é o valor pelo qual vai ser filtrado;
-    - `operator` (opcional) pode ser usado para personalizar a consulta;
+    - `operator` pode ser usado para personalizar a consulta **opcional**;
       - recebe os tipos `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn']`
     - `type` é usado caso o valor do filter NÃO seja do tipo 'string'
       - recebe os tipos: `['string', 'boolean', 'number', 'date']`
