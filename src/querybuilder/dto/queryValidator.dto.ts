@@ -1,20 +1,10 @@
 import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateIf, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { FilterFields } from './filterFields.dto';
 import { PopulateFields } from './populateFields.dto';
+import { SortFields } from './sort.dto';
 
 export class QueryValidator {
-  @IsEnum(['asc', 'desc'])
-  @IsOptional()
-  @Expose()
-  sort: 'asc' | 'desc';
-
-  @IsString()
-  @IsNotEmpty()
-  @ValidateIf((obj) => obj.sort)
-  @Expose()
-  sortField: string;
-
   @IsNumber()
   @IsNotEmpty()
   @IsOptional()
@@ -47,4 +37,9 @@ export class QueryValidator {
   @Type(() => FilterFields)
   @ValidateNested({ each: true })
   filter: FilterFields[];
+
+  @Expose()
+  @Type(() => SortFields)
+  @ValidateNested({ each: true })
+  sort: SortFields;
 }

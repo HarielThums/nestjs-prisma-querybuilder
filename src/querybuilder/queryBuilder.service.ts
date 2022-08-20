@@ -37,13 +37,12 @@ export class Querybuilder {
 
     this.request.res.setHeader('page', query.page);
 
-    if (query.sort && query.sortField) {
+    if (query.sort) {
       query.orderBy = {};
 
-      query.orderBy[query.sortField] = query.sort;
+      query.orderBy[query.sort.field] = query.sort.criteria;
 
       delete query.sort;
-      delete query.sortField;
     }
 
     if (query.page) {
