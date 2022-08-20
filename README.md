@@ -136,10 +136,10 @@
     - on `Response.headers` will have the property `count` and `page` with total of items and page number;
     - `http://localhost:3000/posts?page=2&limit=10`
   - Sort
-    - To use `sort` needed two properties `sort` and `sortField`;
-    - `sort` is a enum with `asc` and `desc`;
-    - `sortField` is the field that sort will be applied;
-    - `http://localhost:3000/posts?sort=asc&sortField=title`
+    - To use `sort` needed two properties `criteria` and `field`;
+    - `criteria` is a enum with `asc` and `desc`;
+    - `field` is the field that sort will be applied;
+    - `http://localhost:3000/posts?sort[criteria]=asc&sort[field]=title`
   - Select
 
     - **All the properties will be separeted by blank space;**
@@ -155,25 +155,24 @@
     - Populate is an array and that allows you to select in the fields of relationships, him need two parameters **`path`** and **`select`;**
     - `path` is the relationship reference (ex: author);
     - `select` are the fields that will be returned;
-    - `primaryKey` is the reference to primary key of the relationship **optional** (default: 'id');
+    - `primaryKey` is the reference to primary key of the relationship (**optional**) (default: 'id');
     - The populate index is needed to link the properties `path` and `select`;
     - `http://localhost:3000/posts?populate[0][path]=author&populate[0][select]=name email`
   - Filter
     - Can be used to filter the query with your requeriments
     - `path` is a reference from the property that will applied the filter;
     - `value` is the value that will be filtered;
+    - `filterGroup` can be used to make where with operators `and`, `or` and `not` or no operator (**optional**);
+      - accepted types: `['and', 'or, 'not’]`
     - `operator` (needs to be used if value don't is a **string**)
-    - `operator` can be used to personalize your filter **optional**;
-      - accepted types:: `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn']`
+    - `operator` can be used to personalize your filter (**optional**);
+      - accepted types: `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn']`
     - `type` needs to be used if value don't is a **string;**
       - accepted types: `['string', 'boolean', 'number', 'date']`
     - filter is an array and that allows you to append some filters to the same query;
     - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
     - `http://localhost:3000/posts?filter[1][path]=published&filter[1][value]=false&filter[1][type]=boolean`
-  - Operator
-    - Can be used to make where with operators `and`, `or` and `not` or no operator;
-      - accepted types: `['and', 'or, 'not’]`
-    - `http://localhost:3000/posts?operator=and&filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
+    - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[0][filterGroup]=and&filter[1][path]=published&filter[1][value]=falsefilter[1][filterGroup]=and`
 
 ---
 
@@ -314,10 +313,10 @@
     - Nos **headers** da **response** haverá a propriedade `count` com o total de itens a serem paginados;
     - `http://localhost:3000/posts?page=2&limit=10`
   - Sort
-    - Para montar o sort são necessário enviar duas propriedades `sort` e `sortField`;
-    - **sort** é um enum com [‘asc’, ‘desc’];
-    - **sortField** é o campo pelo qual a ordenação vai ser aplicada;
-    - `http://localhost:3000/posts?sort=asc&sortField=title`
+    - Para montar o sort são necessário enviar duas propriedades `field` e `criteria`;
+    - **criteria** é um enum com [‘asc’, ‘desc’];
+    - **field** é o campo pelo qual a ordenação vai ser aplicada;
+    - `http://localhost:3000/posts?sort[criteria]=asc&sort[field]=title`
   - Select
 
     - **Todas as propriedades devem ser separadas por espaço em branco;**
@@ -333,14 +332,16 @@
     - Populate é um array que permite dar select nos campos dos relacionamentos, é composto por 2 parametros, **path** e **select**;
     - `path` é a referencia para qual relacionamento será populado;
     - `select` são os campos que irão serem retornados;
-    - `primaryKey` nome da chave primaria do relacionamento **opcional** (default: 'id');
+    - `primaryKey` nome da chave primaria do relacionamento (**opcional**) (default: 'id');
     - Podem ser feitos todos os populates necessários usando o índice \*\*\*\*do array para ligar o path ao select;
     - `http://localhost:3000/posts?populate[0][path]=author&populate[0][select]=name email`
   - Filter
     - Pode ser usado para filtrar a consulta com os parâmetros desejados;
     - `path` é a referencia para qual propriedade irá aplicar o filtro;
     - `value` é o valor pelo qual vai ser filtrado;
-    - `operator` pode ser usado para personalizar a consulta **opcional**;
+    - `filterGroup` Pode ser usado para montar o where usando os operadores [‘AND’, ‘OR’, ‘NOT’] ou nenhum operador (**opcional**);
+      - opções: `['and', 'or, 'not’]`
+    - `operator` pode ser usado para personalizar a consulta (**opcional**);
       - recebe os tipos `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn']`
     - `type` é usado caso o valor do filter NÃO seja do tipo 'string'
       - recebe os tipos: `['string', 'boolean', 'number', 'date']`
@@ -348,9 +349,7 @@
     - consulta simples
       - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
       - `http://localhost:3000/posts?filter[1][path]=published&filter[1][value]=false&filter[1][type]=boolean`
-  - Operator
-    - Pode ser usado para montar o where usando os operadores [‘AND’, ‘OR’, ‘NOT’] ou nenhum operador;
-    - `http://localhost:3000/posts?operator=and&filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
+      - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[0][filterGroup]=and&filter[1][path]=published&filter[1][value]=falsefilter[1][filterGroup]=and`
 
 ---
 
