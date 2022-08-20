@@ -29,11 +29,6 @@ export class QueryValidator {
   populate: PopulateFields[];
 
   @Expose()
-  @IsEnum(['and', 'not', 'or'])
-  @IsOptional()
-  operator: 'and' | 'not' | 'or';
-
-  @Expose()
   @Type(() => FilterFields)
   @ValidateNested({ each: true })
   filter: FilterFields[];

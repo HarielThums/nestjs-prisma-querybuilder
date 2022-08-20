@@ -114,38 +114,18 @@ export class Querybuilder {
     }
 
     if (query.filter) {
-      const operator = query?.operator?.toUpperCase();
-      const where = {};
-
-      if (operator) {
-        where[operator] = [];
-      }
+      const where = { OR: [], NOT: [], AND: [] };
 
       const filter = [query.filter].flat();
 
       filter.forEach((value: FilterFields) => {
-        if (value.type) {
-          switch (value.type) {
-            case 'date': {
-              value.value = new Date(value.value);
-              break;
-            }
-            case 'boolean': {
-              value.value = value.value === 'true' ? true : false;
-              break;
-            }
-            case 'number': {
-              value.value = Number(value.value);
-              break;
-            }
-          }
-        }
+        value.value = this.filterConvertDataType(value);
 
-        if (operator) {
+        if (value.filterGroup) {
           if (value.operator) {
-            where[operator].push({ [value.path]: { [value.operator]: value.value } });
+            where[value.filterGroup.toUpperCase()].push({ [value.path]: { [value.operator]: value.value } });
           } else {
-            where[operator].push({ [value.path]: value.value });
+            where[value.filterGroup.toUpperCase()].push({ [value.path]: value.value });
           }
         } else if (value.operator) {
           where[value.path] = { [value.operator]: value.value };
@@ -155,6 +135,10 @@ export class Querybuilder {
       });
 
       delete query.filter;
+
+      if (!where.OR.length) delete where.OR;
+      if (!where.NOT.length) delete where.NOT;
+      if (!where.AND.length) delete where.AND;
 
       query.where = { ...where };
     }
@@ -166,5 +150,26 @@ export class Querybuilder {
     if (query.select.hasOwnProperty('all')) delete query.select;
 
     return plainToClass(QueryResponse, query, { excludeExtraneousValues: true });
+  }
+
+  private filterConvertDataType(value: FilterFields) {
+    if (value.type) {
+      switch (value.type) {
+        case 'date': {
+          value.value = new Date(value.value);
+          break;
+        }
+        case 'boolean': {
+          value.value = value.value === 'true' ? true : false;
+          break;
+        }
+        case 'number': {
+          value.value = Number(value.value);
+          break;
+        }
+      }
+    }
+
+    return value.value;
   }
 }

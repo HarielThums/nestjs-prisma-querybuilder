@@ -21,4 +21,10 @@ export class FilterFields {
   @IsEnum(['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn'])
   @IsOptional()
   operator: 'contains' | 'endsWith' | 'startsWith' | 'equals' | 'gt' | 'gte' | 'in' | 'lt' | 'lte' | 'not' | 'notIn';
+
+  @Expose()
+  @IsEnum(['and', 'not', 'or'])
+  @IsOptional()
+  filterGroup: 'and' | 'not' | 'or';
+
 }
