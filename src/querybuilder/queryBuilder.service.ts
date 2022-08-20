@@ -104,7 +104,7 @@ export class Querybuilder {
 
       delete query.populate;
 
-      if (query.select.hasOwnProperty('all')) {
+      if (query.select?.hasOwnProperty('all')) {
         query.include = {};
 
         query.include = { ...select };
@@ -147,7 +147,7 @@ export class Querybuilder {
 
     query.select = { [primaryKey]: true, ...query.select };
 
-    if (query.select.hasOwnProperty('all')) delete query.select;
+    if (query.select?.hasOwnProperty('all')) delete query.select;
 
     return plainToClass(QueryResponse, query, { excludeExtraneousValues: true });
   }
