@@ -1,7 +1,7 @@
 {
   "name": "nestjs-prisma-querybuilder",
   "author": "Hariel Thums <hariel@hotmail.com>",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "description": "#",
   "main": "dist/index.js",
@@ -25,10 +25,9 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest"
   },
-  "peerDependencies": {
-    "@nestjs/common": "^8.0.0"
-  },
+  "peerDependencies": {},
   "dependencies": {
+    "@nestjs/common": "^8.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2"
   },
