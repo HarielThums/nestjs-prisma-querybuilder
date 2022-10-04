@@ -144,7 +144,7 @@
 
     - **All the properties will be separeted by blank space;**
     - By default if you don't send any `select` the find just will return the `id` property;
-    - If it is necessary to take the whole object it is possible to use `select=all`, but with that it is not allowed to use populates;
+    - If it is necessary to take the whole object it is possible to use `select=all`;
     - Exception: If you select a relationship field will be return all the object, to select a field in one relation you can use `populate` and to find just him `id` is possible to use `authorId` field;
     - `http://localhost:3000/posts?select=title published authorId`
 
@@ -321,7 +321,7 @@
 
     - **Todas as propriedades devem ser separadas por espaço em branco;**
     - **Por padrão** se não for enviado nenhum **_select_** qualquer busca só irá retornar a propriedade `id`
-    - Se for necessário pegar todo o objeto é possível usar `select=all`, mas com isso não é permitido usar populates,
+    - Se for necessário pegar todo o objeto é possível usar `select=all`,
     - Exceção: ao dar select em um relacionamento será retornado todo o objeto do relacionamento, para usar o select em um relacionamento use o `populate`, para buscar somente o `id` de um relacionamento é possível usar a coluna `authorId`
     - `http://localhost:3000/posts?select=title published authorId`
 
