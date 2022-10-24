@@ -18,6 +18,10 @@ export class FilterFields {
   type: 'string' | 'boolean' | 'number' | 'date';
 
   @Expose()
+  @IsEnum([true, false])
+  caseSensitive = false;
+
+  @Expose()
   @IsEnum(['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn'])
   @IsOptional()
   operator: 'contains' | 'endsWith' | 'startsWith' | 'equals' | 'gt' | 'gte' | 'in' | 'lt' | 'lte' | 'not' | 'notIn';
@@ -26,5 +30,4 @@ export class FilterFields {
   @IsEnum(['and', 'not', 'or'])
   @IsOptional()
   filterGroup: 'and' | 'not' | 'or';
-
 }
