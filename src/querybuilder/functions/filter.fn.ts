@@ -9,14 +9,16 @@ export const filter = (query) => {
     filter.forEach((value: FilterFields) => {
       value.value = filterConvertDataType(value);
 
+      const insensitive = value.insensitive === 'true' ? { mode: 'insensitive' } : undefined;
+
       if (value.filterGroup) {
         if (value.operator) {
-          where[value.filterGroup.toUpperCase()].push({ [value.path]: { [value.operator]: value.value } });
+          where[value.filterGroup.toUpperCase()].push({ [value.path]: { [value.operator]: value.value, ...insensitive } });
         } else {
           where[value.filterGroup.toUpperCase()].push({ [value.path]: value.value });
         }
       } else if (value.operator) {
-        where[value.path] = { [value.operator]: value.value };
+        where[value.path] = { [value.operator]: value.value, ...insensitive };
       } else {
         where[value.path] = value.value;
       }

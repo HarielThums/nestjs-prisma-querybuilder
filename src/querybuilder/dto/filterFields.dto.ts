@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 export class FilterFields {
   @Expose()
@@ -18,8 +18,10 @@ export class FilterFields {
   type: 'string' | 'boolean' | 'number' | 'date';
 
   @Expose()
-  @IsEnum([true, false])
-  caseSensitive = false;
+  @IsEnum(['true', 'false'])
+  @ValidateIf((obj) => obj.insensitive)
+  @IsOptional()
+  insensitive: 'true' | 'false';
 
   @Expose()
   @IsEnum(['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn'])
