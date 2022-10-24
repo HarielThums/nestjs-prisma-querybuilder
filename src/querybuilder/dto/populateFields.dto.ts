@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { FilterFields } from './filterFields.dto';
 
 export class PopulateFields {
   @Expose()
@@ -21,4 +22,8 @@ export class PopulateFields {
   @Expose()
   @Type(() => PopulateFields)
   populate: PopulateFields[];
+
+  @Expose()
+  @Type(() => FilterFields)
+  filter: FilterFields[];
 }

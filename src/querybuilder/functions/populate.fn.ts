@@ -1,4 +1,5 @@
 import { PopulateFields } from '../dto/populateFields.dto';
+import { filter } from './filter.fn';
 
 export const populate = (query) => {
   if (query.populate) {
@@ -34,7 +35,18 @@ export const populate = (query) => {
           });
         }
       }
+
+      console.log('populateFields', value);
+      console.log('value.filter', value.filter);
+
+      if (value.filter) {
+        const filterResponse = filter(value)?.where;
+
+        if (filterResponse) select[value.path]['where'] = filterResponse;
+      }
     });
+
+    console.log('select', select);
 
     delete query.populate;
 
