@@ -1,8 +1,6 @@
 import { FilterFields } from '../dto/filterFields.dto';
 
 export const filter = (query) => {
-  console.log('query', query);
-
   if (query.filter) {
     const where = { OR: [], NOT: [], AND: [] };
 
