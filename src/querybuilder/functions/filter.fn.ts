@@ -11,6 +11,12 @@ export const filter = (query) => {
 
       const insensitive = value.insensitive === 'true' ? { mode: 'insensitive' } : undefined;
 
+      if (value.operator && ['hasEvery', 'hasSome'].includes(value.operator)) {
+        value.value = String(value.value)
+          .split(',')
+          .map((v) => (v[0] === ' ' ? v.substring(1, v.length) : v));
+      }
+
       if (value.filterGroup) {
         if (value.operator) {
           where[value.filterGroup.toUpperCase()].push({ [value.path]: { [value.operator]: value.value, ...insensitive } });

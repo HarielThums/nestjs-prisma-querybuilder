@@ -24,12 +24,29 @@ export class FilterFields {
   insensitive: 'true' | 'false';
 
   @Expose()
-  @IsEnum(['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn'])
+  @IsEnum(['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn', 'hasEvery', 'hasSome', 'has', 'isEmpty'])
   @IsOptional()
-  operator: 'contains' | 'endsWith' | 'startsWith' | 'equals' | 'gt' | 'gte' | 'in' | 'lt' | 'lte' | 'not' | 'notIn';
+  operator: typeOperator;
 
   @Expose()
   @IsEnum(['and', 'not', 'or'])
   @IsOptional()
   filterGroup: 'and' | 'not' | 'or';
 }
+
+type typeOperator =
+  | 'contains'
+  | 'endsWith'
+  | 'startsWith'
+  | 'equals'
+  | 'gt'
+  | 'gte'
+  | 'in'
+  | 'lt'
+  | 'lte'
+  | 'not'
+  | 'notIn'
+  | 'hasEvery'
+  | 'hasSome'
+  | 'has'
+  | 'isEmpty';

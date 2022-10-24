@@ -40,15 +40,15 @@ export class Querybuilder {
 
     this.request.res.setHeader('page', query.page);
 
-    sort(query);
+    query = sort(query);
 
-    paginate(query);
+    query = paginate(query);
 
-    select(query);
+    query = select(query);
 
-    populate(query);
+    query = populate(query);
 
-    filter(query);
+    query = filter(query);
 
     query.select = { [primaryKey]: true, ...query.select };
 
