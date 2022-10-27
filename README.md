@@ -164,11 +164,15 @@
     - `value` is the value that will be filtered;
     - `filterGroup` can be used to make where with operators `and`, `or` and `not` or no operator (**optional**);
       - accepted types: `['and', 'or, 'not’]`
-    - `operator` (needs to be used if value don't is a **string**)
     - `operator` can be used to personalize your filter (**optional**);
-      - accepted types: `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn']`
+      - accepted types: `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn', 'hasEvery', 'hasSome', 'has', 'isEmpty']`
+      - `hasEvery and hasSome` are a unique string and values are separeted by ';'
+        - `?filter[0][path]=name&filter[0][operator]=hasSome&filter[0][value]=foo; bar; ula`
+    - `insensitive` can be used to filter (**optional**);
+      - accepted types: `['true', 'false'] - default: 'false'`
+      - (check prisma rules for more details - [Prisma: Database collation and case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity))
     - `type` needs to be used if value don't is a **string;**
-      - accepted types: `['string', 'boolean', 'number', 'date']`
+      - accepted types: `['string', 'boolean', 'number', 'date'] - default: 'string'`
     - filter is an array and that allows you to append some filters to the same query;
     - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
     - `http://localhost:3000/posts?filter[1][path]=published&filter[1][value]=false&filter[1][type]=boolean`
@@ -342,9 +346,12 @@
     - `filterGroup` Pode ser usado para montar o where usando os operadores [‘AND’, ‘OR’, ‘NOT’] ou nenhum operador (**opcional**);
       - opções: `['and', 'or, 'not’]`
     - `operator` pode ser usado para personalizar a consulta (**opcional**);
-      - recebe os tipos `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn']`
+      - recebe os tipos `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn', 'hasEvery', 'hasSome', 'has', 'isEmpty']`
+    - `insensitive` pode ser usado para personalizar a consulta (**opcional**);
+      - recebe os tipos: `['true', 'false'] - default: 'false'`
+      - (confira as regras do prisma para mais informações - [Prisma: Database collation and case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity))
     - `type` é usado caso o valor do filter NÃO seja do tipo 'string'
-      - recebe os tipos: `['string', 'boolean', 'number', 'date']`
+      - recebe os tipos: `['string', 'boolean', 'number', 'date'] - default: 'string'`
     - filter é um array, podendo ser adicionados vários filtros de acordo com a necessidade da consulta;
     - consulta simples
       - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
