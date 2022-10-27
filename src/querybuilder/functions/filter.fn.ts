@@ -13,7 +13,7 @@ export const filter = (query) => {
 
       if (value.operator && ['hasEvery', 'hasSome'].includes(value.operator)) {
         value.value = String(value.value)
-          .split(',')
+          .split(';')
           .map((v) => (v[0] === ' ' ? v.substring(1, v.length) : v));
       }
 
