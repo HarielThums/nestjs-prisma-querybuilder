@@ -12,11 +12,12 @@
 ### English
 
 - **How to install it?**
-- `npm i nestjs-prisma-querybuilder`
+  - `npm i nestjs-prisma-querybuilder`
 - In your app.module include `Querybuilder` to providers
-
   - `PrismaService` is your serive, to check how know create it read the documentation [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services);
-
+  
+  <br/>
+  
   ```tsx
   // app.module
   import { Querybuilder } from 'nestjs-prisma-querybuilder';
@@ -25,6 +26,8 @@
   ```
 
   - `QuerybuilderService` is your service and you will use it on your methods;
+  
+  <br/>
 
   ```tsx
   import { BadRequestException, Inject, Injectable } from '@nestjs/common';
@@ -85,6 +88,8 @@
     - The `query` method will be mount the query with your @Query() from `REQUEST`, but you don't need to send him as a parameter;
     - The `query` will be append to the `Response.headers` with `count` property with total of objects found (include paginate)
     - The `query` will be receive one **string** with your **model** name, this will be used to make the count;
+    
+    <br/>
 
     ```jsx
       async UserExemple() {
@@ -183,10 +188,12 @@
 ### Português
 
 - **Como instalar?**
-- `npm i nestjs-prisma-querybuilder`
+  - `npm i nestjs-prisma-querybuilder`
 - No seu app.module inclua o `Querybuilder` aos providers:
 
   - `PrismaService` é o **seu** service, para ver como criar ele leia a documentação [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services);
+  
+  <br/>
 
   ```tsx
   // app.module
@@ -196,6 +203,8 @@
   ```
 
   - `QuerybuilderService` vai ser o service que será usado nos seus métodos;
+  
+  <br/>
 
   ```tsx
   import { BadRequestException, Inject, Injectable } from '@nestjs/common';
@@ -266,6 +275,8 @@
     - o método `query` vai montar a query baseada no @Query(), mas o mesmo é pego direto do `REQUEST`, não sendo necessário passar como parâmetro;
     - o método `query` já vai adicionar no `Response.headers` a propriedade `count` que vai ter o total de objetos encontrados (usado para paginação);
     - o método `query` recebe uma **string** com o nome referente ao **model, isso** vai ser usado para fazer o count;
+
+    <br/>
 
     ```jsx
       async UserExemple() {
