@@ -49,6 +49,8 @@ export const populate = (query) => {
       query.include = {};
 
       query.include = { ...select };
+
+      delete query.select;
     } else {
       query.select = { ...query.select, ...select };
     }

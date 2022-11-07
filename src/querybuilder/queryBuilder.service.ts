@@ -44,13 +44,11 @@ export class Querybuilder {
 
     query = paginate(query);
 
-    query = select(query);
+    query = select(query, primaryKey);
 
     query = populate(query);
 
     query = filter(query);
-
-    query.select = { [primaryKey]: true, ...query.select };
 
     if (query.select?.hasOwnProperty('all')) delete query.select;
 
