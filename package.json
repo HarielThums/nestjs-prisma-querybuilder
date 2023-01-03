@@ -22,7 +22,7 @@
     "build": "tsc",
     "format": "prettier --loglevel=error --cache --write \"src/**/*.ts\"",
     "lint": "eslint --cache \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "postinstall": "npx husky install && npm run build"
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@nestjs/common": "^9.2.1",
