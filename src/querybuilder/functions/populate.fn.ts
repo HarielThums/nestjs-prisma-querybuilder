@@ -8,39 +8,11 @@ export const populate = (query) => {
     const populate = [query.populate].flat();
 
     populate.forEach((value: PopulateFields) => {
-      select[value.path] = {};
-
-      select[value.path]['select'] = { [value.primaryKey]: true };
-
-      if (value.populate) {
-        value.populate.forEach((valueInside: PopulateFields) => {
-          select[value.path]['select'][valueInside.path] = {};
-
-          select[value.path]['select'][valueInside.path]['select'] = { [value.primaryKey]: true };
-        });
-      }
+      populateAddSelectPrimaryKey(select, value);
     });
 
     populate.forEach((value: PopulateFields, index) => {
-      if (populate[index].select) {
-        populate[index].select.split(' ').map((v: string) => {
-          select[value.path]['select'][v] = true;
-        });
-
-        if (populate[index].populate) {
-          populate[index].populate.forEach((valueInside: PopulateFields) => {
-            valueInside.select.split(' ').map((v: string) => {
-              select[value.path]['select'][valueInside.path]['select'][v] = true;
-            });
-          });
-        }
-      }
-
-      if (value.filter) {
-        const filterResponse = filter(value)?.where;
-
-        if (filterResponse) select[value.path]['where'] = filterResponse;
-      }
+      populateAddSelectFields(select, populate, value, index);
     });
 
     delete query.populate;
@@ -57,4 +29,36 @@ export const populate = (query) => {
   }
 
   return query;
+};
+
+const populateAddSelectPrimaryKey = (select, value: PopulateFields) => {
+  select[value.path] = {};
+
+  select[value.path]['select'] = { [value.primaryKey]: true };
+
+  if (value.populate) {
+    value.populate.forEach((valueInside: PopulateFields) => {
+      populateAddSelectPrimaryKey(select[value.path]['select'], valueInside);
+    });
+  }
+};
+const populateAddSelectFields = (select, populate, value: PopulateFields, index: number) => {
+  if (populate[index].select) {
+    populate[index].select.split(' ').map((v: string) => {
+      select[value.path]['select'][v] = true;
+    });
+
+    if (populate[index].populate) {
+      populate[index].populate.forEach((valueInside: PopulateFields, indexInside: number) => {
+        populateAddSelectFields(select[value.path]['select'], select[value.path]['populate'][index], valueInside, indexInside);
+      });
+    }
+  }
+
+  // testar mais os níveis de filtro dentro do populate (ainda não está ok)
+  if (value.filter) {
+    const filterResponse = filter(value)?.where;
+
+    if (filterResponse) select[value.path]['where'] = filterResponse;
+  }
 };
