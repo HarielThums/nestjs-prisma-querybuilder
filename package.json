@@ -18,6 +18,21 @@
   "bugs": {
     "url": "https://github.com/HarielThums/nestjs-prisma-query-builder/issues"
   },
+  "keywords": [
+    "nestjs",
+    "prisma",
+    "query",
+    "querybuilder",
+    "where",
+    "filter",
+    "select",
+    "include",
+    "orderBy",
+    "sort",
+    "take",
+    "skip",
+    "paginate"
+  ],
   "scripts": {
     "build": "tsc",
     "format": "prettier --loglevel=error --cache --write \"src/**/*.ts\"",
