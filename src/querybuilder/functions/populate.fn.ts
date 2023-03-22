@@ -12,7 +12,7 @@ export const populate = (query) => {
     });
 
     populate.forEach((value: PopulateFields, index) => {
-      populateAddSelectFields(select, populate, value, index);
+      populateAddSelectFieldsAndFilter(select, populate, value, index);
     });
 
     delete query.populate;
@@ -42,15 +42,16 @@ const populateAddSelectPrimaryKey = (select, value: PopulateFields) => {
     });
   }
 };
-const populateAddSelectFields = (select, populate, value: PopulateFields, index: number) => {
-  if (populate[index].select) {
+
+const populateAddSelectFieldsAndFilter = (select, populate: PopulateFields[], value: PopulateFields, index: number) => {
+  if (populate[index]?.select) {
     populate[index].select.split(' ').map((v: string) => {
       select[value.path]['select'][v] = true;
     });
 
-    if (populate[index].populate) {
-      populate[index].populate.forEach((valueInside: PopulateFields, indexInside: number) => {
-        populateAddSelectFields(select[value.path]['select'], select[value.path]['populate'][index], valueInside, indexInside);
+    if (populate[index]?.populate) {
+      populate[index].populate.forEach((populateInside: PopulateFields, indexInside: number) => {
+        populateAddSelectFieldsAndFilter(select[value.path]['select'], populate[index]['populate'], populateInside, indexInside);
       });
     }
   }
