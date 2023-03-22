@@ -36,7 +36,7 @@ const populateAddSelectPrimaryKey = (select, value: PopulateFields) => {
 
   select[value.path]['select'] = { [value.primaryKey]: true };
 
-  if (value.populate) {
+  if (value.populate?.length) {
     value.populate.forEach((valueInside: PopulateFields) => {
       populateAddSelectPrimaryKey(select[value.path]['select'], valueInside);
     });
@@ -49,7 +49,7 @@ const populateAddSelectFieldsAndFilter = (select, populate: PopulateFields[], va
       select[value.path]['select'][v] = true;
     });
 
-    if (populate[index]?.populate) {
+    if (populate[index]?.populate?.length) {
       populate[index].populate.forEach((populateInside: PopulateFields, indexInside: number) => {
         populateAddSelectFieldsAndFilter(select[value.path]['select'], populate[index]['populate'], populateInside, indexInside);
       });
