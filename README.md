@@ -183,7 +183,12 @@
     - `http://localhost:3000/posts?filter[1][path]=published&filter[1][value]=false&filter[1][type]=boolean`
     - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[0][filterGroup]=and&filter[1][path]=published&filter[1][value]=falsefilter[1][filterGroup]=and`
 
----
+<br/>
+<br/>
+
+<details>
+
+<summary> Documentação em português </summary>
 
 ### Português
 
@@ -369,7 +374,8 @@
       - `http://localhost:3000/posts?filter[1][path]=published&filter[1][value]=false&filter[1][type]=boolean`
       - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[0][filterGroup]=and&filter[1][path]=published&filter[1][value]=falsefilter[1][filterGroup]=and`
 
----
+
+</details>
 
 <br/>
 
