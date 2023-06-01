@@ -2,16 +2,16 @@ import { Expose } from 'class-transformer';
 
 export class QueryResponse {
   @Expose()
-  where: any;
+  where?: any;
 
   @Expose()
-  orderBy: any;
+  orderBy?: any;
 
   @Expose()
-  skip: any;
+  skip?: any;
 
   @Expose()
-  take: any;
+  take?: any;
 
   @Expose()
   select?: any;
