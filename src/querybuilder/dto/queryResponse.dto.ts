@@ -2,7 +2,7 @@ import { Expose } from 'class-transformer';
 
 export class QueryResponse {
   @Expose()
-  where?: any;
+  where: any;
 
   @Expose()
   orderBy?: any;
