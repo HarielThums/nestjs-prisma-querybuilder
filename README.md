@@ -32,6 +32,7 @@
   ```tsx
   import { BadRequestException, Inject, Injectable } from '@nestjs/common';
   import { REQUEST } from '@nestjs/core';
+  import { Prisma } from '@prisma/client'
   import { Querybuilder } from 'nestjs-prisma-querybuilder';
   import { Request } from 'express';
   import { PrismaService } from 'src/prisma.service';
@@ -46,11 +47,13 @@
      * @param primaryKey primaryKey name for this model on prisma.schema;
      * @param where object to 'where' using the prisma rules;
      * @param mergeWhere define if the previous where will be merged with the query where or replace that;
-     * @param onlyPaginate remove any 'select' and 'populate' of the query
+     * @param justPaginate remove any 'select' and 'include'
+     * @param depth limit the the depth to filter/populate. default is '_5_'
+     *
      */
-    async query(model: string, primaryKey?: string, where?: any, mergeWhere = false, onlyPaginate = false) {
+    async query(model: Prisma.ModelName, primaryKey = 'id', where?: any, mergeWhere = false, justPaginate = false, depth?: number): Promise<Partial<QueryResponse>> {
       return this.querybuilder
-        .query(primaryKey)
+        .query(primaryKey, depth)
         .then(async (query) => {
           if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
@@ -58,12 +61,12 @@
 
           this.request.res.setHeader('count', count);
 
-          if (onlyPaginate) {
+          if (justPaginate) {
             delete query.include;
             delete query.select;
           }
 
-          return query;
+          return { ...query }
         })
         .catch((err) => {
           if (err.response?.message) throw new BadRequestException(err.response?.message);
@@ -228,11 +231,12 @@
      * @param primaryKey nome da chave primaria deste model no prisma.schema;
      * @param where objeto para where de acordo com as regras do prisma;
      * @param mergeWhere define se o where informado no parâmetro anterior será unido ou substituirá um possivel where vindo da query;
-     * @param onlyPaginate remove qualquer 'select' e 'populate' da query;
+     * @param justPaginate remove qualquer 'select' e 'populate' da query;
+     * @param depth limita o numero de 'niveis' que a query vai lhe permitir fazer (filter/populate). default is '_5_'
      */
-    async query(model: string, primaryKey?: string, where?: any, mergeWhere = false, onlyPaginate = false) {
+    async query(model: Prisma.ModelName, primaryKey = 'id', where?: any, mergeWhere = false, justPaginate = false, depth?: number): Promise<Partial<QueryResponse>> {
       return this.querybuilder
-        .query(primaryKey)
+        .query(primaryKey, depth)
         .then(async (query) => {
           if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
@@ -245,7 +249,7 @@
             delete query.select;
           }
 
-          return query;
+          return { ...query }
         })
         .catch((err) => {
           if (err.response?.message) throw new BadRequestException(err.response?.message);
