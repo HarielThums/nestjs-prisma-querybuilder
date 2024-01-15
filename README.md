@@ -14,10 +14,11 @@
 - **How to install it?**
   - `npm i nestjs-prisma-querybuilder`
 - In your app.module include `Querybuilder` to providers
+
   - `PrismaService` is your serive, to check how know create it read the documentation [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services);
-  
+
   <br/>
-  
+
   ```tsx
   // app.module
   import { Querybuilder } from 'nestjs-prisma-querybuilder';
@@ -26,13 +27,13 @@
   ```
 
   - `QuerybuilderService` is your service and you will use it on your methods;
-  
+
   <br/>
 
   ```tsx
   import { BadRequestException, Inject, Injectable } from '@nestjs/common';
   import { REQUEST } from '@nestjs/core';
-  import { Prisma } from '@prisma/client'
+  import { Prisma } from '@prisma/client';
   import { Querybuilder } from 'nestjs-prisma-querybuilder';
   import { Request } from 'express';
   import { PrismaService } from 'src/prisma.service';
@@ -48,16 +49,29 @@
      * @param where object to 'where' using the prisma rules;
      * @param mergeWhere define if the previous where will be merged with the query where or replace that;
      * @param justPaginate remove any 'select' and 'include'
+     * @param setHeaders define if will set response headers 'count' and 'page'
      * @param depth limit the the depth to filter/populate. default is '_5_'
      *
      */
-    async query(model: Prisma.ModelName, primaryKey = 'id', where?: any, mergeWhere = false, justPaginate = false, depth?: number): Promise<Partial<QueryResponse>> {
+    async query(
+      model: Prisma.ModelName,
+      primaryKey = 'id',
+      where?: any,
+      mergeWhere = false,
+      justPaginate = false,
+      setHeaders = true,
+      depth?: number
+    ): Promise<Partial<QueryResponse>> {
       return this.querybuilder
-        .query(primaryKey, depth)
+        .query(primaryKey, depth, setHeaders)
         .then(async (query) => {
           if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
-          const count = await this.prisma[model].count({ where: query.where });
+          if (setHeaders) {
+            const count = await this.prisma[model].count({ where: query.where });
+
+            this.request.res.setHeader('count', count);
+          }
 
           this.request.res.setHeader('count', count);
 
@@ -66,7 +80,7 @@
             delete query.select;
           }
 
-          return { ...query }
+          return { ...query };
         })
         .catch((err) => {
           if (err.response?.message) throw new BadRequestException(err.response?.message);
@@ -91,12 +105,12 @@
     - The `query` method will be mount the query with your @Query() from `REQUEST`, but you don't need to send him as a parameter;
     - The `query` will be append to the `Response.headers` with `count` property with total of objects found (include paginate)
     - The `query` will be receive one **string** with your **model** name, this will be used to make the count;
-    
+
     <br/>
 
     ```jsx
       async UserExemple() {
-        const query = await this.qb.query('user');
+        const query = await this.qb.query('User');
 
         return this.prisma.user.findMany(query);
       }
@@ -200,7 +214,7 @@
 - No seu app.module inclua o `Querybuilder` aos providers:
 
   - `PrismaService` é o **seu** service, para ver como criar ele leia a documentação [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services);
-  
+
   <br/>
 
   ```tsx
@@ -211,12 +225,13 @@
   ```
 
   - `QuerybuilderService` vai ser o service que será usado nos seus métodos;
-  
+
   <br/>
 
   ```tsx
   import { BadRequestException, Inject, Injectable } from '@nestjs/common';
   import { REQUEST } from '@nestjs/core';
+  import { Prisma } from '@prisma/client';
   import { Querybuilder } from 'nestjs-prisma-querybuilder';
   import { Request } from 'express';
   import { PrismaService } from 'src/prisma.service';
@@ -232,24 +247,35 @@
      * @param where objeto para where de acordo com as regras do prisma;
      * @param mergeWhere define se o where informado no parâmetro anterior será unido ou substituirá um possivel where vindo da query;
      * @param justPaginate remove qualquer 'select' e 'populate' da query;
+     * @param setHeaders define se será adicionado os headers 'count' e 'page' na resposta;
      * @param depth limita o numero de 'niveis' que a query vai lhe permitir fazer (filter/populate). default is '_5_'
      */
-    async query(model: Prisma.ModelName, primaryKey = 'id', where?: any, mergeWhere = false, justPaginate = false, depth?: number): Promise<Partial<QueryResponse>> {
+    async query(
+      model: Prisma.ModelName,
+      primaryKey = 'id',
+      where?: any,
+      mergeWhere = false,
+      justPaginate = false,
+      setHeaders = true,
+      depth?: number
+    ): Promise<Partial<QueryResponse>> {
       return this.querybuilder
-        .query(primaryKey, depth)
+        .query(primaryKey, depth, setHeaders)
         .then(async (query) => {
           if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
-          const count = await this.prisma[model].count({ where: query.where });
+          if (setHeaders) {
+            const count = await this.prisma[model].count({ where: query.where });
 
-          this.request.res.setHeader('count', count);
+            this.request.res.setHeader('count', count);
+          }
 
           if (onlyPaginate) {
             delete query.include;
             delete query.select;
           }
 
-          return { ...query }
+          return { ...query };
         })
         .catch((err) => {
           if (err.response?.message) throw new BadRequestException(err.response?.message);
@@ -289,7 +315,7 @@
 
     ```jsx
       async UserExemple() {
-        const query = await this.qb.query('user');
+        const query = await this.qb.query('User');
 
         return this.prisma.user.findMany(query);
       }
@@ -377,7 +403,6 @@
       - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
       - `http://localhost:3000/posts?filter[1][path]=published&filter[1][value]=false&filter[1][type]=boolean`
       - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[0][filterGroup]=and&filter[1][path]=published&filter[1][value]=falsefilter[1][filterGroup]=and`
-
 
 </details>
 

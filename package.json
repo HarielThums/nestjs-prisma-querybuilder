@@ -1,9 +1,9 @@
 {
   "name": "nestjs-prisma-querybuilder",
   "author": "Hariel Thums <hariel@hotmail.com>",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "license": "MIT",
-  "description": "#",
+  "description": "Prisma QueryBuilder with Nestjs, removing the unused data request and allowing the frontend to choose which data to get, without leaving the REST standard.",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
   "homepage": "https://github.com/HarielThums/nestjs-prisma-query-builder#readme",
