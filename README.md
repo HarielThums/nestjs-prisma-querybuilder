@@ -51,6 +51,7 @@
      * @param justPaginate remove any 'select' and 'include'
      * @param setHeaders define if will set response headers 'count' and 'page'
      * @param depth limit the the depth to filter/populate. default is '_5_'
+     * @param forbiddenFields fields that will be removed from any select/filter/populate/sort
      *
      */
     async query(
@@ -60,10 +61,11 @@
       mergeWhere = false,
       justPaginate = false,
       setHeaders = true,
-      depth?: number
+      depth?: number,
+      forbiddenFields: string[] = ['password']
     ): Promise<Partial<QueryResponse>> {
       return this.querybuilder
-        .query(primaryKey, depth, setHeaders)
+        .query(primaryKey, depth, setHeaders, forbiddenFields)
         .then(async (query) => {
           if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
@@ -162,17 +164,19 @@
     - `criteria` is a enum with `asc` and `desc`;
     - `field` is the field that sort will be applied;
     - `http://localhost:3000/posts?sort[criteria]=asc&sort[field]=title`
+  - Distinct
+    - **All the properties will be separeted by blank space;**
+    - To use `distinct` is needed only a string;
+    - `http://localhost:3000/posts?distinct=title published`
   - Select
-
     - **All the properties will be separeted by blank space;**
     - By default if you don't send any `select` the find just will return the `id` property;
     - If it is necessary to take the whole object it is possible to use `select=all`;
     - Exception: If you select a relationship field will be return all the object, to select a field in one relation you can use `populate` and to find just him `id` is possible to use `authorId` field;
     - `http://localhost:3000/posts?select=title published authorId`
 
-    - To exclude fields from the return, you can use a dto on prisma response before return to the user;
+    - To exclude fields from the return, you can use a dto on prisma response before return to the user OR use the parameter 'forbiddenFields' into *query* method;
       - Exemple a user password or token informations;
-
   - Populate
     - Populate is an array and that allows you to select in the fields of relationships, him need two parameters **`path`** and **`select`;**
     - `path` is the relationship reference (ex: author);
@@ -249,6 +253,7 @@
      * @param justPaginate remove qualquer 'select' e 'populate' da query;
      * @param setHeaders define se será adicionado os headers 'count' e 'page' na resposta;
      * @param depth limita o numero de 'niveis' que a query vai lhe permitir fazer (filter/populate). default is '_5_'
+     * @param forbiddenFields campos que serão removidos de qualquer select/filter/populate/sort
      */
     async query(
       model: Prisma.ModelName,
@@ -257,10 +262,11 @@
       mergeWhere = false,
       justPaginate = false,
       setHeaders = true,
-      depth?: number
+      depth?: number,
+      forbiddenFields: string[] = ['password']
     ): Promise<Partial<QueryResponse>> {
       return this.querybuilder
-        .query(primaryKey, depth, setHeaders)
+        .query(primaryKey, depth, setHeaders, forbiddenFields)
         .then(async (query) => {
           if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
@@ -367,17 +373,19 @@
     - **criteria** é um enum com [‘asc’, ‘desc’];
     - **field** é o campo pelo qual a ordenação vai ser aplicada;
     - `http://localhost:3000/posts?sort[criteria]=asc&sort[field]=title`
+  - Distinct
+    - **Todas as propriedades devem ser separadas por espaço em branco;**
+    - Para montar o distinct é necessário enviar apenas os valores;
+    - `http://localhost:3000/posts?distinct=title published`
   - Select
-
     - **Todas as propriedades devem ser separadas por espaço em branco;**
     - **Por padrão** se não for enviado nenhum **_select_** qualquer busca só irá retornar a propriedade `id`
     - Se for necessário pegar todo o objeto é possível usar `select=all`,
     - Exceção: ao dar select em um relacionamento será retornado todo o objeto do relacionamento, para usar o select em um relacionamento use o `populate`, para buscar somente o `id` de um relacionamento é possível usar a coluna `authorId`
     - `http://localhost:3000/posts?select=title published authorId`
 
-    - Para excluir campos no retorno, você pode utilizar um DTO na resposta do prisma antes de devolve-lá ao usuário;
+    - Para excluir campos no retorno, você pode utilizar um DTO na resposta do prisma antes de devolve-lá ao usuário OU usar o parametro 'forbiddenFields' no método *query* ;
       - Exemplo uma senha de usuário ou informações de tokens;
-
   - Populate
     - Populate é um array que permite dar select nos campos dos relacionamentos, é composto por 2 parametros, **path** e **select**;
     - `path` é a referencia para qual relacionamento será populado;
