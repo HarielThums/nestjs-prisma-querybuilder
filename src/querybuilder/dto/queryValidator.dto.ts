@@ -2,7 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { FilterFields } from './filterFields.dto';
 import { PopulateFields } from './populateFields.dto';
-import { SortFields } from './sort.dto';
+import { SortFields } from './sortFields.dto';
 
 export class QueryValidator {
   @IsNumber()
