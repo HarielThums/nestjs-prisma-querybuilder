@@ -1,12 +1,14 @@
 import { FilterFields } from '../dto/filterFields.dto';
 
-export const filter = (query) => {
+export const filter = (query, forbiddenFields: string[]) => {
   query['where'] = {};
 
   if (query.filter) {
     const filter = [query.filter].flat();
 
-    filter.forEach((value: FilterFields) => whereAddFilters(value, query['where']));
+    filter
+      .filter((value: FilterFields) => !forbiddenFields.includes(value.path))
+      .forEach((value: FilterFields) => whereAddFilters(value, query['where'], forbiddenFields));
   }
 
   delete query?.filter;
@@ -35,7 +37,9 @@ const filterConvertDataType = (value: FilterFields) => {
   return value.value;
 };
 
-const whereAddFilters = (value: FilterFields, where) => {
+const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) => {
+  if (forbiddenFields.includes(value.path)) return undefined;
+
   if (!where['OR']) where['OR'] = [];
   if (!where['NOT']) where['NOT'] = [];
   if (!where['AND']) where['AND'] = [];
@@ -67,13 +71,13 @@ const whereAddFilters = (value: FilterFields, where) => {
 
     value.filter.forEach((filter) => {
       if (value?.filterGroup) {
-        whereAddFilters(filter, where[value?.filterGroup?.toUpperCase()].find((v: [key: string]) => v[value.path])[value.path]);
+        whereAddFilters(filter, where[value?.filterGroup?.toUpperCase()].find((v: [key: string]) => v[value.path])[value.path], forbiddenFields);
       } else if (filter.filterInsideOperator) {
         if (!where[value.path][filter.filterInsideOperator]) where[value.path][filter.filterInsideOperator] = {};
 
-        whereAddFilters(filter, where[value.path][filter.filterInsideOperator]);
+        whereAddFilters(filter, where[value.path][filter.filterInsideOperator], forbiddenFields);
       } else {
-        whereAddFilters(filter, where[value.path]);
+        whereAddFilters(filter, where[value.path], forbiddenFields);
       }
     });
   }

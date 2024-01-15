@@ -21,23 +21,24 @@ export class Querybuilder {
   /**
    * @param primaryKey PrimaryKey from model selected, default is '_id_'
    * @param depth **QS depth definition**: The depth limit helps mitigate abuse when qs is used to parse user input, and it is recommended to keep it a reasonably small number. default is '_5_'
-   * @param setHeaders define if will set response header 'page'
+   * @param setHeaders define if will set response headers 'count' and 'page'
+   * @param forbiddenFields fields that going to be removed from any select/filter/populate/sort
    * @returns {Promise<Partial<QueryResponse>>} This will return your query to prisma
    * @seemore https://github.com/HarielThums/nestjs-prisma-querybuilder
    */
-  async query(primaryKey = 'id', depth = 5, setHeaders = true): Promise<Partial<QueryResponse>> {
+  async query(primaryKey = 'id', depth = 5, setHeaders = true, forbiddenFields: string[] = []): Promise<Partial<QueryResponse>> {
     const requestQueryParsed = qs.parse(qs.stringify(this.request.query), { depth: depth });
 
     const queryValidator = defaultPlainToClass(QueryValidator, requestQueryParsed);
 
     await defaultValidateOrReject(queryValidator);
 
-    const query = this.buildQuery(queryValidator, primaryKey, setHeaders);
+    const query = this.buildQuery(queryValidator, primaryKey, setHeaders, forbiddenFields);
 
     return query;
   }
 
-  private buildQuery(query, primaryKey: string, setHeaders: boolean) {
+  private buildQuery(query, primaryKey: string, setHeaders: boolean, forbiddenFields: string[]) {
     query.page = Number(query.page) > 0 ? Number(query.page) : 1;
     query.limit = Number(query.limit) > 0 ? Number(query.limit) : 10;
 
@@ -47,11 +48,13 @@ export class Querybuilder {
 
     query = paginate(query);
 
-    query = select(query, primaryKey);
+    query = sort(query, forbiddenFields);
 
-    query = populate(query);
+    query = select(query, primaryKey, forbiddenFields);
 
-    query = filter(query);
+    query = populate(query, forbiddenFields);
+
+    query = filter(query, forbiddenFields);
 
     if (query.select?.hasOwnProperty('all')) delete query.select;
 

@@ -1,9 +1,13 @@
 import { PopulateFields } from '../dto/populateFields.dto';
 import { filter } from './filter.fn';
 
-export const populate = (query) => {
+interface SelectI {
+  [key: string]: boolean | SelectI;
+}
+
+export const populate = (query, forbiddenFields: string[]) => {
   if (query.populate) {
-    const select = {};
+    const select: SelectI = {};
 
     const populate = [query.populate].flat();
 
@@ -12,7 +16,7 @@ export const populate = (query) => {
     });
 
     populate.forEach((value: PopulateFields, index) => {
-      populateAddSelectFieldsAndFilter(select, populate, value, index);
+      populateAddSelectFieldsAndFilter(select, populate, value, index, forbiddenFields);
     });
 
     delete query.populate;
@@ -31,7 +35,7 @@ export const populate = (query) => {
   return query;
 };
 
-const populateAddSelectPrimaryKey = (select, value: PopulateFields) => {
+const populateAddSelectPrimaryKey = (select: SelectI, value: PopulateFields) => {
   select[value.path] = {};
 
   select[value.path]['select'] = { [value.primaryKey]: true };
@@ -43,7 +47,7 @@ const populateAddSelectPrimaryKey = (select, value: PopulateFields) => {
   }
 };
 
-const populateAddSelectFieldsAndFilter = (select, populate: PopulateFields[], value: PopulateFields, index: number) => {
+const populateAddSelectFieldsAndFilter = (select: SelectI, populate: PopulateFields[], value: PopulateFields, index: number, forbiddenFields: string[]) => {
   if (populate[index]?.select) {
     populate[index].select.split(' ').map((v: string) => {
       select[value.path]['select'][v] = true;
@@ -51,14 +55,14 @@ const populateAddSelectFieldsAndFilter = (select, populate: PopulateFields[], va
 
     if (populate[index]?.populate?.length) {
       populate[index].populate.forEach((populateInside: PopulateFields, indexInside: number) => {
-        populateAddSelectFieldsAndFilter(select[value.path]['select'], populate[index]['populate'], populateInside, indexInside);
+        populateAddSelectFieldsAndFilter(select[value.path]['select'], populate[index]['populate'], populateInside, indexInside, forbiddenFields);
       });
     }
   }
 
   // testar mais os níveis de filtro dentro do populate (ainda não está ok)
   if (value.filter) {
-    const filterResponse = filter(value)?.where;
+    const filterResponse = filter(value, forbiddenFields)?.where;
 
     if (filterResponse) select[value.path]['where'] = filterResponse;
   }

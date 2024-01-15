@@ -1,8 +1,10 @@
-export const sort = (query) => {
+export const sort = (query, forbiddenFields: string[]) => {
   if (query.sort) {
-    query.orderBy = {};
+    if (!forbiddenFields.includes(query.sort.field)) {
+      query.orderBy = {};
 
-    query.orderBy[query.sort.field] = query.sort.criteria;
+      query.orderBy[query.sort.field] = query.sort.criteria;
+    }
 
     delete query.sort;
   }
