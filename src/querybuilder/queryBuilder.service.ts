@@ -7,6 +7,7 @@ import { defaultPlainToClass } from '../utils/functions/plainToClass.fn';
 import defaultValidateOrReject from '../utils/functions/validateOrReject.fn';
 import { QueryResponse } from './dto/queryResponse.dto';
 import { QueryValidator } from './dto/queryValidator.dto';
+import { distinct } from './functions/distinct.fn';
 import { filter } from './functions/filter.fn';
 import { paginate } from './functions/paginate.fn';
 import { populate } from './functions/populate.fn';
@@ -44,11 +45,11 @@ export class Querybuilder {
 
     if (setHeaders) this?.request?.res?.setHeader('page', query.page);
 
-    query = sort(query);
-
     query = paginate(query);
 
     query = sort(query, forbiddenFields);
+
+    query = distinct(query, forbiddenFields);
 
     query = select(query, primaryKey, forbiddenFields);
 

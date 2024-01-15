@@ -24,6 +24,12 @@ export class QueryValidator {
   select: string;
 
   @Expose()
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  distinct: string;
+
+  @Expose()
   @Type(() => PopulateFields)
   @ValidateNested({ each: true })
   populate: PopulateFields[];

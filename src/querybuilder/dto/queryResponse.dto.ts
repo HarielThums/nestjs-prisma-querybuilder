@@ -14,6 +14,9 @@ export class QueryResponse {
   take?: any;
 
   @Expose()
+  distinct?: any;
+
+  @Expose()
   select?: any;
 
   @Expose()
