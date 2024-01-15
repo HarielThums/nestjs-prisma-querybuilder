@@ -54,19 +54,21 @@ const whereAddFilters = (value: FilterFields, where) => {
     if (value.operator) {
       where[value.filterGroup.toUpperCase()]?.push({ [value.path]: { [value.operator]: value.value, ...insensitive } });
     } else {
-      where[value.filterGroup.toUpperCase()]?.push({ [value.path]: value.value });
+      where[value.filterGroup.toUpperCase()]?.push({ [value.path]: value?.value ? value.value : {} });
     }
-  } else if (value.operator) {
-    where[value.path] = { [value.operator]: value.value, ...insensitive };
+  } else if (value?.operator) {
+    where[value.path] = { [value.operator]: value?.value, ...insensitive };
   } else {
-    where[value.path] = value.value;
+    where[value?.path] = value.value;
   }
 
   if (value?.filter?.length) {
-    if (!where[value.path]) where[value.path] = {};
+    if (!where[value.path] && !value?.filterGroup) where[value.path] = {};
 
     value.filter.forEach((filter) => {
-      if (filter.filterInsideOperator) {
+      if (value?.filterGroup) {
+        whereAddFilters(filter, where[value?.filterGroup?.toUpperCase()].find((v: [key: string]) => v[value.path])[value.path]);
+      } else if (filter.filterInsideOperator) {
         if (!where[value.path][filter.filterInsideOperator]) where[value.path][filter.filterInsideOperator] = {};
 
         whereAddFilters(filter, where[value.path][filter.filterInsideOperator]);
