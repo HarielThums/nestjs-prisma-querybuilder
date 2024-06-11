@@ -62,7 +62,7 @@
       justPaginate = false,
       setHeaders = true,
       depth?: number,
-      forbiddenFields: string[] = ['password']
+      forbiddenFields: string[] = []
     ): Promise<Partial<QueryResponse>> {
       return this.querybuilder
         .query(primaryKey, depth, setHeaders, forbiddenFields)
@@ -263,7 +263,7 @@
       justPaginate = false,
       setHeaders = true,
       depth?: number,
-      forbiddenFields: string[] = ['password']
+      forbiddenFields: string[] = []
     ): Promise<Partial<QueryResponse>> {
       return this.querybuilder
         .query(primaryKey, depth, setHeaders, forbiddenFields)
