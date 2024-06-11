@@ -21,7 +21,7 @@ export const populate = (query, forbiddenFields: string[]) => {
 
     delete query.populate;
 
-    if (query.select?.hasOwnProperty('all')) {
+    if (query.select?.hasOwnProperty('all') && !forbiddenFields?.length) {
       query.include = {};
 
       query.include = { ...select };

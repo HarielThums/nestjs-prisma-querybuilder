@@ -57,7 +57,7 @@ export class Querybuilder {
 
     query = filter(query, forbiddenFields);
 
-    if (query.select?.hasOwnProperty('all')) delete query.select;
+    if (query.select?.hasOwnProperty('all') && !forbiddenFields?.length) delete query.select;
 
     return plainToClass(QueryResponse, query, { excludeExtraneousValues: true });
   }
