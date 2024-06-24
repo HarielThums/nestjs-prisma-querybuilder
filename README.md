@@ -12,86 +12,103 @@
 ### English
 
 - **How to install it?**
+
   - `npm i nestjs-prisma-querybuilder`
+
+  <br/>
+
+- If there is any **CORS** configuration in your project, add the properties **count** and **page** into your **exposedHeaders**;
+
+  <br/>
+
 - In your app.module include `Querybuilder` to providers
 
   - `PrismaService` is your serive, to check how know create it read the documentation [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services);
 
+    ```tsx
+    // app.module
+    import { Querybuilder } from 'nestjs-prisma-querybuilder';
+
+    providers: [PrismaService, QuerybuilderService, Querybuilder],
+    ```
+
   <br/>
-
-  ```tsx
-  // app.module
-  import { Querybuilder } from 'nestjs-prisma-querybuilder';
-
-  providers: [PrismaService, QuerybuilderService, Querybuilder],
-  ```
 
   - `QuerybuilderService` is your service and you will use it on your methods;
 
-  <br/>
+    ```tsx
+    import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+    import { REQUEST } from '@nestjs/core';
+    import { Prisma } from '@prisma/client';
+    import { Querybuilder } from 'nestjs-prisma-querybuilder';
+    import { Request } from 'express';
+    import { PrismaService } from 'src/prisma.service';
 
-  ```tsx
-  import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-  import { REQUEST } from '@nestjs/core';
-  import { Prisma } from '@prisma/client';
-  import { Querybuilder } from 'nestjs-prisma-querybuilder';
-  import { Request } from 'express';
-  import { PrismaService } from 'src/prisma.service';
+    @Injectable()
+    export class QuerybuilderService {
+      constructor(@Inject(REQUEST) private readonly request: Request, private readonly querybuilder: Querybuilder, private readonly prisma: PrismaService) {}
 
-  @Injectable()
-  export class QuerybuilderService {
-    constructor(@Inject(REQUEST) private readonly request: Request, private readonly querybuilder: Querybuilder, private readonly prisma: PrismaService) {}
+      /**
+       *
+       * @param model model name on schema.prisma;
+       * @param primaryKey primaryKey name for this model on prisma.schema;
+       * @param where object to 'where' using the prisma rules;
+       * @param mergeWhere define if the previous where will be merged with the query where or replace that;
+       * @param justPaginate remove any 'select' and 'include'
+       * @param setHeaders define if will set response headers 'count' and 'page'
+       * @param depth limit the the depth to filter/populate. default is '_5_'
+       * @param forbiddenFields fields that will be removed from any select/filter/populate/sort
+       *
+       */
+      async query({
+        model,
+        where,
+        depth,
+        setHeaders,
+        mergeWhere,
+        justPaginate,
+        forbiddenFields,
+        primaryKey = 'id'
+      }: {
+        model: Prisma.ModelName;
+        where?: any;
+        depth?: number;
+        primaryKey?: string;
+        mergeWhere?: boolean;
+        setHeaders?: boolean;
+        justPaginate?: boolean;
+        forbiddenFields?: string[];
+      }): Promise<Partial<QueryResponse>> {
+        return this.querybuilder
+          .query(primaryKey, depth, setHeaders, forbiddenFields)
+          .then(async (query) => {
+            if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
-    /**
-     *
-     * @param model model name on schema.prisma;
-     * @param primaryKey primaryKey name for this model on prisma.schema;
-     * @param where object to 'where' using the prisma rules;
-     * @param mergeWhere define if the previous where will be merged with the query where or replace that;
-     * @param justPaginate remove any 'select' and 'include'
-     * @param setHeaders define if will set response headers 'count' and 'page'
-     * @param depth limit the the depth to filter/populate. default is '_5_'
-     * @param forbiddenFields fields that will be removed from any select/filter/populate/sort
-     *
-     */
-    async query(
-      model: Prisma.ModelName,
-      primaryKey = 'id',
-      where?: any,
-      mergeWhere = false,
-      justPaginate = false,
-      setHeaders = true,
-      depth?: number,
-      forbiddenFields: string[] = []
-    ): Promise<Partial<QueryResponse>> {
-      return this.querybuilder
-        .query(primaryKey, depth, setHeaders, forbiddenFields)
-        .then(async (query) => {
-          if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
+            if (setHeaders) {
+              const count = await this.prisma[model].count({ where: query.where });
 
-          if (setHeaders) {
-            const count = await this.prisma[model].count({ where: query.where });
+              this.request.res.setHeader('count', count);
+            }
 
             this.request.res.setHeader('count', count);
-          }
 
-          this.request.res.setHeader('count', count);
+            if (justPaginate) {
+              delete query.include;
+              delete query.select;
+            }
 
-          if (justPaginate) {
-            delete query.include;
-            delete query.select;
-          }
+            return { ...query };
+          })
+          .catch((err) => {
+            if (err.response?.message) throw new BadRequestException(err.response?.message);
 
-          return { ...query };
-        })
-        .catch((err) => {
-          if (err.response?.message) throw new BadRequestException(err.response?.message);
-
-          throw new BadRequestException('Internal error processing your query string, check your parameters');
-        });
+            throw new BadRequestException('Internal error processing your query string, check your parameters');
+          });
+      }
     }
-  }
-  ```
+    ```
+
+  <br/>
 
 - **How to use it?**
 
@@ -169,14 +186,16 @@
     - To use `distinct` is needed only a string;
     - `http://localhost:3000/posts?distinct=title published`
   - Select
+
     - **All the properties will be separeted by blank space;**
     - By default if you don't send any `select` the find just will return the `id` property;
     - If it is necessary to take the whole object it is possible to use `select=all`;
     - Exception: If you select a relationship field will be return all the object, to select a field in one relation you can use `populate` and to find just him `id` is possible to use `authorId` field;
     - `http://localhost:3000/posts?select=title published authorId`
 
-    - To exclude fields from the return, you can use a dto on prisma response before return to the user OR use the parameter 'forbiddenFields' into *query* method;
+    - To exclude fields from the return, you can use a dto on prisma response before return to the user OR use the parameter 'forbiddenFields' into _query_ method;
       - Exemple a user password or token informations;
+
   - Populate
     - Populate is an array and that allows you to select in the fields of relationships, him need two parameters **`path`** and **`select`;**
     - `path` is the relationship reference (ex: author);
@@ -192,13 +211,14 @@
       - accepted types: `['and', 'or, 'not’]`
     - `operator` can be used to personalize your filter (**optional**);
       - accepted types: `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn', 'hasEvery', 'hasSome', 'has', 'isEmpty']`
-      - `hasEvery and hasSome` are a unique string and values are separeted by ';'
-        - `?filter[0][path]=name&filter[0][operator]=hasSome&filter[0][value]=foo; bar; ula`
+      - `hasEvery, hasSome and notIn` are a unique string and values are separeted by blank space
+        - `?filter[0][path]=name&filter[0][operator]=hasSome&filter[0][value]=foo bar ula`
     - `insensitive` can be used to filter (**optional**);
       - accepted types: `['true', 'false'] - default: 'false'`
       - (check prisma rules for more details - [Prisma: Database collation and case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity))
     - `type` needs to be used if value don't is a **string;**
-      - accepted types: `['string', 'boolean', 'number', 'date'] - default: 'string'`
+      - accepted types: `['string', 'boolean', 'number', 'date' , 'object'] - default: 'string'`
+        - 'object' accepted values: ['null', 'undefined']
     - filter is an array and that allows you to append some filters to the same query;
     - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
     - `http://localhost:3000/posts?filter[1][path]=published&filter[1][value]=false&filter[1][type]=boolean`
@@ -219,78 +239,87 @@
 
   - `PrismaService` é o **seu** service, para ver como criar ele leia a documentação [@nestjs/prisma](https://docs.nestjs.com/recipes/prisma#use-prisma-client-in-your-nestjs-services);
 
-  <br/>
+    ```tsx
+    // app.module
+    import { Querybuilder } from 'nestjs-prisma-querybuilder';
 
-  ```tsx
-  // app.module
-  import { Querybuilder } from 'nestjs-prisma-querybuilder';
+    providers: [PrismaService, QuerybuilderService, Querybuilder],
+    ```
 
-  providers: [PrismaService, QuerybuilderService, Querybuilder],
-  ```
+    <br/>
 
   - `QuerybuilderService` vai ser o service que será usado nos seus métodos;
 
-  <br/>
+    ```tsx
+    import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+    import { REQUEST } from '@nestjs/core';
+    import { Prisma } from '@prisma/client';
+    import { Querybuilder } from 'nestjs-prisma-querybuilder';
+    import { Request } from 'express';
+    import { PrismaService } from 'src/prisma.service';
 
-  ```tsx
-  import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-  import { REQUEST } from '@nestjs/core';
-  import { Prisma } from '@prisma/client';
-  import { Querybuilder } from 'nestjs-prisma-querybuilder';
-  import { Request } from 'express';
-  import { PrismaService } from 'src/prisma.service';
+    @Injectable()
+    export class QuerybuilderService {
+      constructor(@Inject(REQUEST) private readonly request: Request, private readonly querybuilder: Querybuilder, private readonly prisma: PrismaService) {}
 
-  @Injectable()
-  export class QuerybuilderService {
-    constructor(@Inject(REQUEST) private readonly request: Request, private readonly querybuilder: Querybuilder, private readonly prisma: PrismaService) {}
+      /**
+       *
+       * @param model nome do model no schema.prisma;
+       * @param primaryKey nome da chave primaria deste model no prisma.schema;
+       * @param where objeto para where de acordo com as regras do prisma;
+       * @param mergeWhere define se o where informado no parâmetro anterior será unido ou substituirá um possivel where vindo da query;
+       * @param justPaginate remove qualquer 'select' e 'populate' da query;
+       * @param setHeaders define se será adicionado os headers 'count' e 'page' na resposta;
+       * @param depth limita o numero de 'niveis' que a query vai lhe permitir fazer (filter/populate). default is '_5_'
+       * @param forbiddenFields campos que serão removidos de qualquer select/filter/populate/sort
+       */
+      async query({
+        model,
+        where,
+        depth,
+        setHeaders,
+        mergeWhere,
+        justPaginate,
+        forbiddenFields,
+        primaryKey = 'id'
+      }: {
+        model: Prisma.ModelName;
+        where?: any;
+        depth?: number;
+        primaryKey?: string;
+        mergeWhere?: boolean;
+        setHeaders?: boolean;
+        justPaginate?: boolean;
+        forbiddenFields?: string[];
+      }): Promise<Partial<QueryResponse>> {
+        return this.querybuilder
+          .query(primaryKey, depth, setHeaders, forbiddenFields)
+          .then(async (query) => {
+            if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
-    /**
-     *
-     * @param model nome do model no schema.prisma;
-     * @param primaryKey nome da chave primaria deste model no prisma.schema;
-     * @param where objeto para where de acordo com as regras do prisma;
-     * @param mergeWhere define se o where informado no parâmetro anterior será unido ou substituirá um possivel where vindo da query;
-     * @param justPaginate remove qualquer 'select' e 'populate' da query;
-     * @param setHeaders define se será adicionado os headers 'count' e 'page' na resposta;
-     * @param depth limita o numero de 'niveis' que a query vai lhe permitir fazer (filter/populate). default is '_5_'
-     * @param forbiddenFields campos que serão removidos de qualquer select/filter/populate/sort
-     */
-    async query(
-      model: Prisma.ModelName,
-      primaryKey = 'id',
-      where?: any,
-      mergeWhere = false,
-      justPaginate = false,
-      setHeaders = true,
-      depth?: number,
-      forbiddenFields: string[] = []
-    ): Promise<Partial<QueryResponse>> {
-      return this.querybuilder
-        .query(primaryKey, depth, setHeaders, forbiddenFields)
-        .then(async (query) => {
-          if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
+            if (setHeaders) {
+              const count = await this.prisma[model].count({ where: query.where });
 
-          if (setHeaders) {
-            const count = await this.prisma[model].count({ where: query.where });
+              this.request.res.setHeader('count', count);
+            }
 
-            this.request.res.setHeader('count', count);
-          }
+            if (onlyPaginate) {
+              delete query.include;
+              delete query.select;
+            }
 
-          if (onlyPaginate) {
-            delete query.include;
-            delete query.select;
-          }
+            return { ...query };
+          })
+          .catch((err) => {
+            if (err.response?.message) throw new BadRequestException(err.response?.message);
 
-          return { ...query };
-        })
-        .catch((err) => {
-          if (err.response?.message) throw new BadRequestException(err.response?.message);
-
-          throw new BadRequestException('Internal error processing your query string, check your parameters');
-        });
+            throw new BadRequestException('Internal error processing your query string, check your parameters');
+          });
+      }
     }
-  }
-  ```
+    ```
+
+  <br/>
 
 - **Optional**: Você pode adicionar uma validação adicional para o parametro `model`, mas essa validação vai variar de acordo com o seu database;
 
@@ -378,20 +407,22 @@
     - Para montar o distinct é necessário enviar apenas os valores;
     - `http://localhost:3000/posts?distinct=title published`
   - Select
+
     - **Todas as propriedades devem ser separadas por espaço em branco;**
     - **Por padrão** se não for enviado nenhum **_select_** qualquer busca só irá retornar a propriedade `id`
     - Se for necessário pegar todo o objeto é possível usar `select=all`,
     - Exceção: ao dar select em um relacionamento será retornado todo o objeto do relacionamento, para usar o select em um relacionamento use o `populate`, para buscar somente o `id` de um relacionamento é possível usar a coluna `authorId`
     - `http://localhost:3000/posts?select=title published authorId`
 
-    - Para excluir campos no retorno, você pode utilizar um DTO na resposta do prisma antes de devolve-lá ao usuário OU usar o parametro 'forbiddenFields' no método *query* ;
+    - Para excluir campos no retorno, você pode utilizar um DTO na resposta do prisma antes de devolve-lá ao usuário OU usar o parametro 'forbiddenFields' no método _query_ ;
       - Exemplo uma senha de usuário ou informações de tokens;
+
   - Populate
     - Populate é um array que permite dar select nos campos dos relacionamentos, é composto por 2 parametros, **path** e **select**;
     - `path` é a referencia para qual relacionamento será populado;
     - `select` são os campos que irão serem retornados;
     - `primaryKey` nome da chave primaria do relacionamento (**opcional**) (default: 'id');
-    - Podem ser feitos todos os populates necessários usando o índice \*\*\*\*do array para ligar o path ao select;
+    - Podem ser feitos todos os populates necessários usando o índice do array para ligar o path ao select;
     - `http://localhost:3000/posts?populate[0][path]=author&populate[0][select]=name email`
   - Filter
     - Pode ser usado para filtrar a consulta com os parâmetros desejados;
@@ -401,11 +432,14 @@
       - opções: `['and', 'or, 'not’]`
     - `operator` pode ser usado para personalizar a consulta (**opcional**);
       - recebe os tipos `['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn', 'hasEvery', 'hasSome', 'has', 'isEmpty']`
+      - `hasEvery, hasSome e notIn` recebe uma unica string separando os valores por um espaço em branco
+        - `?filter[0][path]=name&filter[0][operator]=hasSome&filter[0][value]=foo bar ula`
     - `insensitive` pode ser usado para personalizar a consulta (**opcional**);
       - recebe os tipos: `['true', 'false'] - default: 'false'`
       - (confira as regras do prisma para mais informações - [Prisma: Database collation and case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity))
     - `type` é usado caso o valor do filter NÃO seja do tipo 'string'
-      - recebe os tipos: `['string', 'boolean', 'number', 'date'] - default: 'string'`
+      - recebe os tipos: `['string', 'boolean', 'number', 'date' , 'object'] - default: 'string'`
+        - 'object' recebe os valores: ['null', 'undefined']
     - filter é um array, podendo ser adicionados vários filtros de acordo com a necessidade da consulta;
     - consulta simples
       - `http://localhost:3000/posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[1][path]=published&filter[1][value]=false`
