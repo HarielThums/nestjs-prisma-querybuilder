@@ -66,10 +66,11 @@ const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) 
 
   const insensitive = value.insensitive === 'true' ? { mode: 'insensitive' } : undefined;
 
-  if (value?.operator && ['hasEvery', 'hasSome'].includes(value.operator)) {
+  if (value?.operator && ['in', 'notIn', 'hasEvery', 'hasSome'].includes(value.operator)) {
     value.value = String(value.value)
-      .split(';')
-      .map((v) => (v[0] === ' ' ? v.substring(1, v.length) : v));
+      .split(/;|,/g)
+      .map((v) => v.trim())
+      .filter((v) => v);
   }
 
   if (value?.filterGroup) {
