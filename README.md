@@ -182,18 +182,17 @@
     - `field` is the field that sort will be applied;
     - `http://localhost:3000/posts?sort[criteria]=asc&sort[field]=title`
   - Distinct
-    - **All the properties will be separeted by blank space;**
+    - **All the properties will be separeted by blank space, comma or semicolon;**
     - To use `distinct` is needed only a string;
     - `http://localhost:3000/posts?distinct=title published`
   - Select
-
-    - **All the properties will be separeted by blank space;**
+    - **All the properties will be separeted by blank space, comma or semicolon;**
     - By default if you don't send any `select` the find just will return the `id` property;
     - If it is necessary to take the whole object it is possible to use `select=all`;
     - Exception: If you select a relationship field will be return all the object, to select a field in one relation you can use `populate` and to find just him `id` is possible to use `authorId` field;
-    - `http://localhost:3000/posts?select=title published authorId`
+    - `http://localhost:3000/posts?select=id title,published;authorId`
 
-    - To exclude fields from the return, you can use a dto on prisma response before return to the user OR use the parameter 'forbiddenFields' into _query_ method;
+    - To exclude fields from the return, you can use a dto on prisma response before return to the user **OR** use the parameter 'forbiddenFields' into _query_ method;
       - Exemple a user password or token informations;
 
   - Populate
@@ -403,16 +402,15 @@
     - **field** é o campo pelo qual a ordenação vai ser aplicada;
     - `http://localhost:3000/posts?sort[criteria]=asc&sort[field]=title`
   - Distinct
-    - **Todas as propriedades devem ser separadas por espaço em branco;**
+    - **Todas as propriedades devem ser separadas por espaço em branco, virgula ou ponto e virgula;**
     - Para montar o distinct é necessário enviar apenas os valores;
     - `http://localhost:3000/posts?distinct=title published`
   - Select
-
-    - **Todas as propriedades devem ser separadas por espaço em branco;**
+    - **Todas as propriedades devem ser separadas por espaço em branco, virgula ou ponto e virgula;**
     - **Por padrão** se não for enviado nenhum **_select_** qualquer busca só irá retornar a propriedade `id`
     - Se for necessário pegar todo o objeto é possível usar `select=all`,
     - Exceção: ao dar select em um relacionamento será retornado todo o objeto do relacionamento, para usar o select em um relacionamento use o `populate`, para buscar somente o `id` de um relacionamento é possível usar a coluna `authorId`
-    - `http://localhost:3000/posts?select=title published authorId`
+    - `http://localhost:3000/posts?select=id title,published;authorId`
 
     - Para excluir campos no retorno, você pode utilizar um DTO na resposta do prisma antes de devolve-lá ao usuário OU usar o parametro 'forbiddenFields' no método _query_ ;
       - Exemplo uma senha de usuário ou informações de tokens;
