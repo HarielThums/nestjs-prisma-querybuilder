@@ -14,9 +14,9 @@ export class FilterFields {
   value: any;
 
   @Expose()
-  @IsEnum(['string', 'boolean', 'number', 'date'])
+  @IsEnum(['string', 'boolean', 'number', 'date', 'object'])
   @IsOptional()
-  type: 'string' | 'boolean' | 'number' | 'date';
+  type: 'string' | 'boolean' | 'number' | 'date' | 'object';
 
   @Expose()
   @IsEnum(['true', 'false'])

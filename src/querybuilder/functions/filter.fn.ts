@@ -31,6 +31,24 @@ const filterConvertDataType = (value: FilterFields) => {
         value.value = Number(value.value);
         break;
       }
+      case 'object': {
+        switch (value.value) {
+          case 'null': {
+            value.value = null;
+            break;
+          }
+          case 'undefined': {
+            value.value = undefined;
+            break;
+          }
+        }
+        break;
+      }
+
+      default: {
+        value.value = String(value.value);
+        break;
+      }
     }
   }
 
