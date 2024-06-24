@@ -49,7 +49,7 @@ const populateAddSelectPrimaryKey = (select: SelectI, value: PopulateFields) => 
 
 const populateAddSelectFieldsAndFilter = (select: SelectI, populate: PopulateFields[], value: PopulateFields, index: number, forbiddenFields: string[]) => {
   if (populate[index]?.select) {
-    populate[index].select.split(' ').map((v: string) => {
+    populate[index].select.split(/;|,|\s/g).map((v: string) => {
       select[value.path]['select'][v] = true;
     });
 

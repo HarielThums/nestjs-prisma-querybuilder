@@ -5,7 +5,7 @@ export const select = (query, primaryKey: string, forbiddenFields: string[]) => 
 
   if (query.select) {
     query.select
-      .split(' ')
+      .split(/;|,|\s/g)
       .map((v: string) => v?.trim())
       .filter((v: string) => v && !forbiddenFields.includes(v))
       .map((v: string) => (select[v] = true));
