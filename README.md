@@ -184,6 +184,7 @@
     - To use `distinct` is needed only a string;
     - `http://localhost:3000/posts?distinct=title published`
   - Select
+
     - **All the properties will be separeted by blank space, comma or semicolon;**
     - By default if you don't send any `select` the find just will return the `id` property;
     - If it is necessary to take the whole object it is possible to use `select=all`;
@@ -192,11 +193,13 @@
 
     - To exclude fields from the return, you can use a dto on prisma response before return to the user **OR** use the parameter 'forbiddenFields' into _query_ method;
       - Exemple a user password or token informations;
+      - When using forbiddenFields select 'all' will be ignored;
 
   - Populate
     - Populate is an array and that allows you to select in the fields of relationships, him need two parameters **`path`** and **`select`;**
     - `path` is the relationship reference (ex: author);
     - `select` are the fields that will be returned;
+      - `select=all` is not supported by populate
     - `primaryKey` is the reference to primary key of the relationship (**optional**) (default: 'id');
     - The populate index is needed to link the properties `path` and `select`;
     - `http://localhost:3000/posts?populate[0][path]=author&populate[0][select]=name email`
@@ -404,6 +407,7 @@
     - Para montar o distinct é necessário enviar apenas os valores;
     - `http://localhost:3000/posts?distinct=title published`
   - Select
+
     - **Todas as propriedades devem ser separadas por espaço em branco, virgula ou ponto e virgula;**
     - **Por padrão** se não for enviado nenhum **_select_** qualquer busca só irá retornar a propriedade `id`
     - Se for necessário pegar todo o objeto é possível usar `select=all`,
@@ -412,11 +416,13 @@
 
     - Para excluir campos no retorno, você pode utilizar um DTO na resposta do prisma antes de devolve-lá ao usuário OU usar o parametro 'forbiddenFields' no método _query_ ;
       - Exemplo uma senha de usuário ou informações de tokens;
+      - Ao usar forbiddenFields select 'all' será ignorado;
 
   - Populate
     - Populate é um array que permite dar select nos campos dos relacionamentos, é composto por 2 parametros, **path** e **select**;
     - `path` é a referencia para qual relacionamento será populado;
     - `select` são os campos que irão serem retornados;
+      - `select=all` não é suportado no populate
     - `primaryKey` nome da chave primaria do relacionamento (**opcional**) (default: 'id');
     - Podem ser feitos todos os populates necessários usando o índice do array para ligar o path ao select;
     - `http://localhost:3000/posts?populate[0][path]=author&populate[0][select]=name email`
