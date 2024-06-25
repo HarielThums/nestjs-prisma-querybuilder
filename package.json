@@ -35,7 +35,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test:unit": "jest --passWithNoTests --forceExit --maxWorkers=10",
+    "test": "jest --passWithNoTests --forceExit --maxWorkers=10",
     "format": "prettier --loglevel=error --cache --write \"src/**/*.ts\"",
     "lint": "eslint --cache \"{src,apps,libs,test}/**/*.ts\" --fix",
     "prepare": "npm run build"
