@@ -62,13 +62,13 @@
        */
       async query({
         model,
-        where,
         depth,
-        setHeaders,
+        where,
         mergeWhere,
         justPaginate,
         forbiddenFields,
         primaryKey = 'id'
+        setHeaders = true,
       }: {
         model: Prisma.ModelName;
         where?: any;
@@ -89,8 +89,6 @@
 
               this.request.res.setHeader('count', count);
             }
-
-            this.request.res.setHeader('count', count);
 
             if (justPaginate) {
               delete query.include;
@@ -228,7 +226,7 @@
 
 <details>
 
-<summary> Documentação em português </summary>
+<summary> Documentação em Português </summary>
 
 ### Português
 
@@ -274,13 +272,13 @@
        */
       async query({
         model,
-        where,
         depth,
-        setHeaders,
+        where,
         mergeWhere,
         justPaginate,
         forbiddenFields,
-        primaryKey = 'id'
+        primaryKey = 'id',
+        setHeaders = true
       }: {
         model: Prisma.ModelName;
         where?: any;
