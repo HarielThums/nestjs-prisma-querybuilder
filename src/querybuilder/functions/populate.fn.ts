@@ -9,7 +9,7 @@ export const populate = (query, forbiddenFields: string[]) => {
   if (query.populate) {
     const select: SelectI = {};
 
-    const populate = [query.populate].flat();
+    const populate = [query.populate].flat().filter((v) => !forbiddenFields.includes(v.path));
 
     populate.forEach((value: PopulateFields) => {
       populateAddSelectPrimaryKey(select, value);
@@ -51,6 +51,10 @@ const populateAddSelectFieldsAndFilter = (select: SelectI, populate: PopulateFie
   if (populate[index]?.select) {
     populate[index].select.split(/;|,|\s/g).map((v: string) => {
       if (v === 'all' && forbiddenFields?.length) {
+        return;
+      }
+
+      if (forbiddenFields.includes(v)) {
         return;
       }
 
