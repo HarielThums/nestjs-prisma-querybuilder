@@ -66,8 +66,6 @@ describe('populate', () => {
 
     const result = populate(query, forbiddenFields);
 
-    console.log(`🚀 ~ file: populate.spec.ts:63 ~ result:`, result);
-
     expect(result.select).toBeDefined();
     expect(result.select.username).toBeDefined();
     expect(result.select.populate1).toBeDefined();
@@ -82,8 +80,6 @@ describe('populate', () => {
     const forbiddenFields = ['field2'];
 
     const result = populate(query, forbiddenFields);
-
-    console.log(`🚀 ~ file: populate.spec.ts:63 ~ result:`, result);
 
     expect(result.select).toBeDefined();
     expect(result.select.username).toBeDefined();
