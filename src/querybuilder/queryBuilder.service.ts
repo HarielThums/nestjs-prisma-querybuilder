@@ -39,7 +39,7 @@ export class Querybuilder {
     return query;
   }
 
-  private buildQuery(query, primaryKey: string, setHeaders: boolean, forbiddenFields: string[]) {
+  buildQuery(query, primaryKey: string, setHeaders: boolean, forbiddenFields: string[]) {
     query.page = Number(query.page) > 0 ? Number(query.page) : 1;
     query.limit = Number(query.limit) > 0 ? Number(query.limit) : 10;
 
@@ -57,7 +57,7 @@ export class Querybuilder {
 
     query = filter(query, forbiddenFields);
 
-    if (query.select?.hasOwnProperty('all') && !forbiddenFields?.length) delete query.select;
+    if (query?.select?.hasOwnProperty('all') && !forbiddenFields?.length) delete query.select;
 
     return plainToClass(QueryResponse, query, { excludeExtraneousValues: true });
   }
