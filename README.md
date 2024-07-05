@@ -40,7 +40,7 @@
     import { BadRequestException, Inject, Injectable } from '@nestjs/common';
     import { REQUEST } from '@nestjs/core';
     import { Prisma } from '@prisma/client';
-    import { Querybuilder } from 'nestjs-prisma-querybuilder';
+    import { Querybuilder, QueryResponse } from 'nestjs-prisma-querybuilder';
     import { Request } from 'express';
     import { PrismaService } from 'src/prisma.service';
 
@@ -67,8 +67,8 @@
         mergeWhere,
         justPaginate,
         forbiddenFields,
-        primaryKey = 'id'
-        setHeaders = true,
+        primaryKey = 'id',
+        setHeaders = true
       }: {
         model: Prisma.ModelName;
         where?: any;
@@ -254,7 +254,7 @@
     import { BadRequestException, Inject, Injectable } from '@nestjs/common';
     import { REQUEST } from '@nestjs/core';
     import { Prisma } from '@prisma/client';
-    import { Querybuilder } from 'nestjs-prisma-querybuilder';
+    import { Querybuilder, QueryResponse } from 'nestjs-prisma-querybuilder';
     import { Request } from 'express';
     import { PrismaService } from 'src/prisma.service';
 
