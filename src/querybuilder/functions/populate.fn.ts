@@ -49,17 +49,12 @@ const populateAddSelectPrimaryKey = (select: SelectI, value: PopulateFields) => 
 
 const populateAddSelectFieldsAndFilter = (select: SelectI, populate: PopulateFields[], value: PopulateFields, index: number, forbiddenFields: string[]) => {
   if (populate[index]?.select) {
-    populate[index].select.split(/;|,|\s/g).map((v: string) => {
-      if (v === 'all') {
-        return;
-      }
-
-      if (forbiddenFields.includes(v)) {
-        return;
-      }
-
-      select[value.path]['select'][v] = true;
-    });
+    populate[index].select
+      .split(/;|,|\s/g)
+      .map((v: string) => v?.trim())
+      .filter((v: string) => v !== 'all')
+      .filter((v: string) => v && !forbiddenFields.includes(v))
+      .map((v: string) => (select[value.path]['select'][v] = true));
 
     if (populate[index]?.populate?.length) {
       populate[index].populate.forEach((populateInside: PopulateFields, indexInside: number) => {
