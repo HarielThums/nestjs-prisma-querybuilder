@@ -70,7 +70,8 @@ const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) 
     value.value = String(value.value)
       .split(/;|,/g)
       .map((v) => v.trim())
-      .filter((v) => v);
+      .filter((v) => v)
+      .map((v) => filterConvertDataType({ ...value, value: v }));
   }
 
   if (value?.filterGroup) {
