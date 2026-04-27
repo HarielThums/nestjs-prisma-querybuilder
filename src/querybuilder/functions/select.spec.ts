@@ -57,6 +57,14 @@ describe('select', () => {
     expect(result.select.field1).toBeDefined();
   });
 
+  it('should not add any primaryKey when primaryKey is an empty string', () => {
+    const result = select({ select: 'name,age' }, '', []);
+
+    expect(result.select.name).toBe(true);
+    expect(result.select.age).toBe(true);
+    expect(Object.keys(result.select)).not.toContain('');
+  });
+
   it('should handle multiple delimiters in query.select', () => {
     const query = { select: 'id;field1,field2 field3' };
 

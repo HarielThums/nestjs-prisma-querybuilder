@@ -113,4 +113,90 @@ describe('populate', () => {
 
     expect(resultSingle.select).toStrictEqual(resultArray.select);
   });
+
+  it('should handle nested populate (two levels deep)', () => {
+    const query = {
+      select: { username: true },
+      populate: [
+        {
+          path: 'posts',
+          select: 'title',
+          populate: [{ path: 'comments', select: 'text' }]
+        }
+      ]
+    };
+
+    const result = populate(query, []);
+
+    expect(result.select.posts).toBeDefined();
+    expect(result.select.posts.select.title).toBe(true);
+    expect(result.select.posts.select.comments).toBeDefined();
+    expect(result.select.posts.select.comments.select.text).toBe(true);
+  });
+
+  it('should always include primaryKey in nested populate select', () => {
+    const query = {
+      select: { id: true },
+      populate: [{ path: 'author', select: 'name', primaryKey: 'id' }]
+    };
+
+    const result = populate(query, []);
+
+    expect(result.select.author.select.id).toBe(true);
+    expect(result.select.author.select.name).toBe(true);
+  });
+
+  it('should apply filter within populate to produce a where clause', () => {
+    const query = {
+      select: { id: true },
+      populate: [
+        {
+          path: 'posts',
+          select: 'title',
+          filter: [{ path: 'published', value: 'true', type: 'boolean' }]
+        }
+      ]
+    };
+
+    const result = populate(query, []);
+
+    expect(result.select.posts.where).toBeDefined();
+    expect(result.select.posts.where.published).toBe(true);
+  });
+
+  it('should include only the primaryKey when populate has no select field', () => {
+    const query = {
+      select: { id: true },
+      populate: [{ path: 'author', primaryKey: 'id' }]
+    };
+
+    const result = populate(query, []);
+
+    expect(result.select.author.select.id).toBe(true);
+    expect(Object.keys(result.select.author.select)).toHaveLength(1);
+  });
+
+  it('should use a custom primaryKey in the nested select', () => {
+    const query = {
+      select: { id: true },
+      populate: [{ path: 'author', select: 'name', primaryKey: '_id' }]
+    };
+
+    const result = populate(query, []);
+
+    expect(result.select.author.select._id).toBe(true);
+    expect(result.select.author.select.id).toBeUndefined();
+    expect(result.select.author.select.name).toBe(true);
+  });
+
+  it('should not include a where clause in populate when no filter is provided', () => {
+    const query = {
+      select: { id: true },
+      populate: [{ path: 'posts', select: 'title' }]
+    };
+
+    const result = populate(query, []);
+
+    expect(result.select.posts.where).toBeUndefined();
+  });
 });
