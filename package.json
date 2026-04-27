@@ -40,6 +40,16 @@
     "lint": "eslint --cache \"{src,apps,libs,test}/**/*.ts\" --fix",
     "prepare": "npm run build"
   },
+  "peerDependencies": {
+    "@nestjs/common": ">=9.0.0",
+    "@prisma/client": ">=4.0.0",
+    "express": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@prisma/client": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@nestjs/common": "^11.1.17",
     "class-transformer": "^0.5.1",
