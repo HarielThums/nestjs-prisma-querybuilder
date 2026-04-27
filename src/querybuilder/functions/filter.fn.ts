@@ -1,5 +1,11 @@
 import { FilterFields } from '../dto/filterFields.dto';
 
+/**
+ * Builds the Prisma `where` clause from query filter parameters.
+ * @param query - Query object containing an optional `filter` array or single filter object
+ * @param forbiddenFields - Field names that must be excluded from filtering
+ * @returns The query object with `where` populated and `filter` removed
+ */
 export const filter = (query, forbiddenFields: string[]) => {
   query['where'] = {};
 
