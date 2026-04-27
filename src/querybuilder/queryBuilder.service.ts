@@ -39,6 +39,15 @@ export class Querybuilder {
     return query;
   }
 
+  /**
+   * Synchronous pipeline that converts a plain query object into a Prisma-compatible query.
+   * Called internally by `query()` after validation; also useful for unit testing.
+   * @param query - Plain object matching the QueryValidator shape
+   * @param primaryKey - Primary key field always included in select (e.g. 'id')
+   * @param setHeaders - Whether to write `page` response header
+   * @param forbiddenFields - Field names excluded from all operations (select, filter, sort, populate)
+   * @returns Prisma-compatible query object (QueryResponse)
+   */
   buildQuery(query, primaryKey: string, setHeaders: boolean, forbiddenFields: string[]) {
     query.page = Number(query.page) > 0 ? Number(query.page) : 1;
     query.limit = Number(query.limit) > 0 ? Number(query.limit) : 10;
