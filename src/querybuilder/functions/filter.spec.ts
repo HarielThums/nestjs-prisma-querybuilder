@@ -299,5 +299,23 @@ describe('filter', () => {
       expect(result.where.comments.none).toBeDefined();
       expect(result.where.comments.none.spam).toBe(true);
     });
+
+    it('should apply nested filter inside a filterGroup entry', () => {
+      // Covers line 100: filterGroup + nested filter → finds the parent entry in the AND/OR/NOT array
+      const query = {
+        filter: [
+          {
+            path: 'posts',
+            filterGroup: 'and',
+            filter: [{ path: 'published', value: 'true', type: 'boolean' }]
+          }
+        ]
+      };
+
+      const result = filter(query, []);
+
+      expect(result.where.AND).toHaveLength(1);
+      expect(result.where.AND[0].posts.published).toBe(true);
+    });
   });
 });

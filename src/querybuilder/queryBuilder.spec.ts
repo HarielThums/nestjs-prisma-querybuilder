@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { Request } from 'express';
-import { Querybuilder } from './queryBuilder.service';
+import { Querybuilder } from './queryBuilder';
 
 describe('Querybuilder', () => {
   let queryBuilder: Querybuilder;

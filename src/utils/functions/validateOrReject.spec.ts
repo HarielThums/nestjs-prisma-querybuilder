@@ -75,6 +75,27 @@ describe('defaultValidateOrReject', () => {
     expect(response.message.length).toBeGreaterThan(0);
   });
 
+  it('should produce empty message array when error has neither constraints nor children', async () => {
+    // Covers the else branches on lines 11 and 25 — ValidationError with no constraints and no children
+    const classValidator = require('class-validator');
+    const spy = jest.spyOn(classValidator, 'validateOrReject').mockRejectedValueOnce([
+      { constraints: undefined, children: undefined }
+    ]);
+
+    let caught: BadRequestException | undefined;
+    try {
+      await defaultValidateOrReject({});
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(caught).toBeInstanceOf(BadRequestException);
+    const response = caught.getResponse() as { message: string[] };
+    expect(response.message).toHaveLength(0);
+
+    spy.mockRestore();
+  });
+
   it('should recurse into grandchildren errors (populate path empty forces 3-level tree)', async () => {
     // @ValidateNested({ each: true }) on an array creates: populate → index '0' → field
     // This intermediate index node forces getErrMessages to recurse (line 25 truthy branch).
