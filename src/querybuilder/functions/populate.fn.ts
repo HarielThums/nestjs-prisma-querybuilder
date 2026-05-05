@@ -62,15 +62,14 @@ const populateAddSelectFieldsAndFilter = (select: SelectI, populate: PopulateFie
       .filter((v: string) => v !== 'all')
       .filter((v: string) => v && !forbiddenFields.includes(v))
       .map((v: string) => (select[value.path]['select'][v] = true));
-
-    if (populate[index]?.populate?.length) {
-      populate[index].populate.forEach((populateInside: PopulateFields, indexInside: number) => {
-        populateAddSelectFieldsAndFilter(select[value.path]['select'], populate[index]['populate'], populateInside, indexInside, forbiddenFields);
-      });
-    }
   }
 
-  // testar mais os níveis de filtro dentro do populate (ainda não está ok)
+  if (populate[index]?.populate?.length) {
+    populate[index].populate.forEach((populateInside: PopulateFields, indexInside: number) => {
+      populateAddSelectFieldsAndFilter(select[value.path]['select'], populate[index]['populate'], populateInside, indexInside, forbiddenFields);
+    });
+  }
+
   if (value.filter) {
     const filterResponse = filter(value, forbiddenFields)?.where;
 

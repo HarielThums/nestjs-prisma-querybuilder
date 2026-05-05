@@ -199,4 +199,113 @@ describe('populate', () => {
 
     expect(result.select.posts.where).toBeUndefined();
   });
+
+  describe('regression: nested populate without parent select', () => {
+    it('should process nested populate select even when parent has no select field', () => {
+      // Bug: when parent populate had no `select`, nested children's select was skipped
+      const query = {
+        select: { id: true },
+        populate: [
+          {
+            path: 'posts',
+            populate: [{ path: 'comments', select: 'text' }]
+          }
+        ]
+      };
+
+      const result = populate(query, []);
+
+      expect(result.select.posts.select.comments.select.text).toBe(true);
+    });
+
+    it('should process nested populate filter even when parent has no select field', () => {
+      const query = {
+        select: { id: true },
+        populate: [
+          {
+            path: 'posts',
+            populate: [
+              {
+                path: 'comments',
+                select: 'text',
+                filter: [{ path: 'approved', value: 'true', type: 'boolean' }]
+              }
+            ]
+          }
+        ]
+      };
+
+      const result = populate(query, []);
+
+      expect(result.select.posts.select.comments.select.text).toBe(true);
+      expect(result.select.posts.select.comments.where.approved).toBe(true);
+    });
+
+    it('should apply filter on top-level populate and process nested populate simultaneously', () => {
+      const query = {
+        select: { id: true },
+        populate: [
+          {
+            path: 'posts',
+            select: 'title',
+            filter: [{ path: 'published', value: 'true', type: 'boolean' }],
+            populate: [{ path: 'comments', select: 'text' }]
+          }
+        ]
+      };
+
+      const result = populate(query, []);
+
+      expect(result.select.posts.where.published).toBe(true);
+      expect(result.select.posts.select.title).toBe(true);
+      expect(result.select.posts.select.comments.select.text).toBe(true);
+    });
+
+    it('should handle 3-level deep nested populate with select and filter', () => {
+      const query = {
+        select: { id: true },
+        populate: [
+          {
+            path: 'posts',
+            select: 'title',
+            filter: [{ path: 'published', value: 'true', type: 'boolean' }],
+            populate: [
+              {
+                path: 'comments',
+                select: 'text',
+                filter: [{ path: 'approved', value: 'true', type: 'boolean' }],
+                populate: [{ path: 'likes', select: 'userId' }]
+              }
+            ]
+          }
+        ]
+      };
+
+      const result = populate(query, []);
+
+      expect(result.select.posts.select.title).toBe(true);
+      expect(result.select.posts.where.published).toBe(true);
+      expect(result.select.posts.select.comments.select.text).toBe(true);
+      expect(result.select.posts.select.comments.where.approved).toBe(true);
+      expect(result.select.posts.select.comments.select.likes.select.userId).toBe(true);
+    });
+
+    it('should set an empty where on populate when all filter fields are forbidden', () => {
+      // Covers line 76: filter() returns { where: {} } — empty object is truthy so where is still set
+      const query = {
+        select: { id: true },
+        populate: [
+          {
+            path: 'posts',
+            select: 'title',
+            filter: [{ path: 'secret', value: 'x' }]
+          }
+        ]
+      };
+
+      const result = populate(query, ['secret']);
+
+      expect(result.select.posts.where).toStrictEqual({});
+    });
+  });
 });
