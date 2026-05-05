@@ -14,7 +14,7 @@ export class QuerybuilderService {
    * @param primaryKey primary key field name for this model (default: 'id')
    * @param where object for 'where' using Prisma rules
    * @param mergeWhere if true, merges with the query string where; if false, replaces it
-   * @param justPaginate removes any 'select' and 'include' from the query
+   * @param paginationOnly removes any 'select' and 'include' from the query
    * @param setHeaders adds 'count' and 'page' response headers
    * @param depth limits the qs parsing depth (default: 5)
    * @param forbiddenFields fields removed from any select/filter/populate/sort/distinct
@@ -24,7 +24,7 @@ export class QuerybuilderService {
     depth,
     where,
     mergeWhere,
-    justPaginate,
+    paginationOnly,
     forbiddenFields,
     primaryKey = 'id',
     setHeaders = true
@@ -35,7 +35,7 @@ export class QuerybuilderService {
     primaryKey?: string;
     mergeWhere?: boolean;
     setHeaders?: boolean;
-    justPaginate?: boolean;
+    paginationOnly?: boolean;
     forbiddenFields?: string[];
   }): Promise<Partial<QueryResponse>> {
     return this.querybuilder
@@ -49,7 +49,7 @@ export class QuerybuilderService {
           this.querybuilder.request.res.setHeader('count', count);
         }
 
-        if (justPaginate) {
+        if (paginationOnly) {
           delete query.include;
           delete query.select;
         }

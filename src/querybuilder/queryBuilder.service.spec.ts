@@ -69,20 +69,20 @@ describe('QuerybuilderService', () => {
     });
   });
 
-  describe('justPaginate', () => {
-    it('should remove select and include when justPaginate=true', async () => {
+  describe('paginationOnly', () => {
+    it('should remove select and include when paginationOnly=true', async () => {
       const { service } = makeService({ select: 'name,email' });
 
-      const result = await service.query({ model: 'Post', setHeaders: false, justPaginate: true });
+      const result = await service.query({ model: 'Post', setHeaders: false, paginationOnly: true });
 
       expect(result.select).toBeUndefined();
       expect(result.include).toBeUndefined();
     });
 
-    it('should keep select when justPaginate=false', async () => {
+    it('should keep select when paginationOnly=false', async () => {
       const { service } = makeService({ select: 'name,email' });
 
-      const result = await service.query({ model: 'Post', setHeaders: false, justPaginate: false });
+      const result = await service.query({ model: 'Post', setHeaders: false, paginationOnly: false });
 
       expect(result.select).toBeDefined();
     });
