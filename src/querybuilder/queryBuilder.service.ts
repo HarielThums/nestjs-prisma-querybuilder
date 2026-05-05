@@ -1,73 +1,64 @@
-import { Global, Inject, Injectable } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
-import { plainToClass } from 'class-transformer';
-import { Request } from 'express';
-import * as qs from 'qs';
-import { defaultPlainToClass } from '../utils/functions/plainToClass.fn';
-import defaultValidateOrReject from '../utils/functions/validateOrReject.fn';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { QueryResponse } from './dto/queryResponse.dto';
-import { QueryValidator } from './dto/queryValidator.dto';
-import { distinct } from './functions/distinct.fn';
-import { filter } from './functions/filter.fn';
-import { paginate } from './functions/paginate.fn';
-import { populate } from './functions/populate.fn';
-import { select } from './functions/select.fn';
-import { sort } from './functions/sort.fn';
+import { Querybuilder } from './queryBuilder';
 
-@Global()
 @Injectable()
-export class Querybuilder {
-  constructor(@Inject(REQUEST) private readonly request: Request) {}
+export class QuerybuilderService {
+  constructor(
+    readonly querybuilder: Querybuilder,
+    private readonly prisma: Record<string, any>
+  ) {}
 
   /**
-   * @param primaryKey PrimaryKey from model selected, default is '_id_'
-   * @param depth **QS depth definition**: The depth limit helps mitigate abuse when qs is used to parse user input, and it is recommended to keep it a reasonably small number. default is '_5_'
-   * @param setHeaders define if will set response headers 'count' and 'page'
-   * @param forbiddenFields fields that going to be removed from any select/filter/populate/sort
-   * @returns {Promise<Partial<QueryResponse>>} This will return your query to prisma
-   * @seemore https://github.com/HarielThums/nestjs-prisma-querybuilder
+   * @param model model name on schema.prisma
+   * @param primaryKey primary key field name for this model (default: 'id')
+   * @param where object for 'where' using Prisma rules
+   * @param mergeWhere if true, merges with the query string where; if false, replaces it
+   * @param justPaginate removes any 'select' and 'include' from the query
+   * @param setHeaders adds 'count' and 'page' response headers
+   * @param depth limits the qs parsing depth (default: 5)
+   * @param forbiddenFields fields removed from any select/filter/populate/sort/distinct
    */
-  async query(primaryKey = 'id', depth = 5, setHeaders = true, forbiddenFields: string[] = []): Promise<Partial<QueryResponse>> {
-    const requestQueryParsed = qs.parse(qs.stringify(this.request.query), { depth: depth });
+  async query({
+    model,
+    depth,
+    where,
+    mergeWhere,
+    justPaginate,
+    forbiddenFields,
+    primaryKey = 'id',
+    setHeaders = true
+  }: {
+    model: string;
+    where?: any;
+    depth?: number;
+    primaryKey?: string;
+    mergeWhere?: boolean;
+    setHeaders?: boolean;
+    justPaginate?: boolean;
+    forbiddenFields?: string[];
+  }): Promise<Partial<QueryResponse>> {
+    return this.querybuilder
+      .query(primaryKey, depth, setHeaders, forbiddenFields)
+      .then(async (query) => {
+        if (where) query.where = mergeWhere ? { ...query.where, ...where } : where;
 
-    const queryValidator = defaultPlainToClass(QueryValidator, requestQueryParsed);
+        if (setHeaders) {
+          const count = await this.prisma[model].count({ where: query.where });
 
-    await defaultValidateOrReject(queryValidator);
+          this.querybuilder.request.res.setHeader('count', count);
+        }
 
-    const query = this.buildQuery(queryValidator, primaryKey, setHeaders, forbiddenFields);
+        if (justPaginate) {
+          delete query.include;
+          delete query.select;
+        }
 
-    return query;
-  }
-
-  /**
-   * Synchronous pipeline that converts a plain query object into a Prisma-compatible query.
-   * Called internally by `query()` after validation; also useful for unit testing.
-   * @param query - Plain object matching the QueryValidator shape
-   * @param primaryKey - Primary key field always included in select (e.g. 'id')
-   * @param setHeaders - Whether to write `page` response header
-   * @param forbiddenFields - Field names excluded from all operations (select, filter, sort, populate)
-   * @returns Prisma-compatible query object (QueryResponse)
-   */
-  buildQuery(query, primaryKey: string, setHeaders: boolean, forbiddenFields: string[]) {
-    query.page = Number(query.page) > 0 ? Number(query.page) : 1;
-    query.limit = Number(query.limit) > 0 ? Number(query.limit) : 10;
-
-    if (setHeaders) this?.request?.res?.setHeader('page', query.page);
-
-    query = paginate(query);
-
-    query = sort(query, forbiddenFields);
-
-    query = distinct(query, forbiddenFields);
-
-    query = select(query, primaryKey, forbiddenFields);
-
-    query = populate(query, forbiddenFields);
-
-    query = filter(query, forbiddenFields);
-
-    if (query?.select?.hasOwnProperty('all') && !forbiddenFields?.length) delete query.select;
-
-    return plainToClass(QueryResponse, query, { excludeExtraneousValues: true });
+        return { ...query };
+      })
+      .catch((err) => {
+        if (err.response?.message) throw new BadRequestException(err.response?.message);
+        throw new BadRequestException('Internal error processing your query string, check your parameters');
+      });
   }
 }
