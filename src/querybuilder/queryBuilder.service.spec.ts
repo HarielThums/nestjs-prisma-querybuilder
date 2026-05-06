@@ -108,6 +108,14 @@ describe('QuerybuilderService', () => {
         'Internal error processing your query string, check your parameters'
       );
     });
+
+    it('should throw BadRequestException when model does not exist in prisma', async () => {
+      const { service } = makeService();
+
+      await expect(service.query({ model: 'NonExistent' as any, setHeaders: false })).rejects.toThrow(
+        'Model "NonExistent" not found in PrismaClient'
+      );
+    });
   });
 
   describe('forbiddenFields', () => {

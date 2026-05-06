@@ -46,6 +46,10 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
     paginationOnly?: boolean;
     forbiddenFields?: string[];
   }): Promise<Partial<QueryResponse>> {
+    if (!this.prisma[model]) {
+      throw new BadRequestException(`Model "${model}" not found in PrismaClient`);
+    }
+
     return this.querybuilder
       .query(primaryKey, depth, setHeaders, forbiddenFields)
       .then(async (query) => {
