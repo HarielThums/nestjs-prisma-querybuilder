@@ -138,4 +138,52 @@ describe('QuerybuilderService', () => {
       expect(result.select?.['_id']).toBe(true);
     });
   });
+
+  describe('onQuery', () => {
+    it('should apply onQuery transform to the result', async () => {
+      const qb = makeQuerybuilder();
+      const prisma: MockPrisma = {
+        Post: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        User: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) }
+      };
+      const onQuery = jest.fn((q) => ({ ...q, where: { ...q.where, tenantId: 1 } }));
+      const service = new QuerybuilderService<MockPrisma>(qb, prisma, onQuery);
+
+      const result = await service.query({ model: 'Post', setHeaders: false });
+
+      expect(onQuery).toHaveBeenCalled();
+      expect(result.where).toMatchObject({ tenantId: 1 });
+    });
+
+    it('should not call onQuery when not provided', async () => {
+      const { service } = makeService();
+
+      const result = await service.query({ model: 'Post', setHeaders: false });
+
+      expect(result.where).toStrictEqual({});
+    });
+  });
+
+  describe('maxTake', () => {
+    const makePrisma = (): MockPrisma => ({
+      Post: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+      User: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) }
+    });
+
+    it('should cap take when it exceeds maxTake', async () => {
+      const service = new QuerybuilderService<MockPrisma>(makeQuerybuilder({ limit: '500' }), makePrisma(), undefined, 100);
+
+      const result = await service.query({ model: 'Post', setHeaders: false });
+
+      expect(result.take).toBe(100);
+    });
+
+    it('should not change take when below maxTake', async () => {
+      const service = new QuerybuilderService<MockPrisma>(makeQuerybuilder({ limit: '10' }), makePrisma(), undefined, 100);
+
+      const result = await service.query({ model: 'Post', setHeaders: false });
+
+      expect(result.take).toBe(10);
+    });
+  });
 });

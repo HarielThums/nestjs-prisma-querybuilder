@@ -7,6 +7,8 @@ type ExportableToken = string | symbol | Provider | Type | DynamicModule | Forwa
 
 export interface QuerybuilderModuleOptions {
   prisma: Record<string, any>;
+  maxTake?: number;
+  onQuery?: (query: Record<string, any>) => Record<string, any>;
 }
 
 export interface QuerybuilderModuleAsyncOptions extends Pick<ModuleMetadata, 'imports'> {
@@ -27,7 +29,7 @@ export class QuerybuilderModule {
       provide: token,
       useFactory: async (qb: Querybuilder, ...args: unknown[]) => {
         const opts = await options.useFactory(...args);
-        return new QuerybuilderService(qb, opts.prisma);
+        return new QuerybuilderService(qb, opts.prisma, opts.onQuery, opts.maxTake);
       },
       inject: [Querybuilder, ...(options.inject ?? [])]
     };

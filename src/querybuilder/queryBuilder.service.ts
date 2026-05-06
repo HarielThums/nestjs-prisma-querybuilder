@@ -14,7 +14,9 @@ type WhereInput<TPrisma, TModel extends keyof TPrisma> = TPrisma[TModel] extends
 export class QuerybuilderService<TPrisma extends Record<string, any> = Record<string, any>> {
   constructor(
     readonly querybuilder: Querybuilder,
-    private readonly prisma: TPrisma
+    private readonly prisma: TPrisma,
+    private readonly onQuery?: (query: Record<string, any>) => Record<string, any>,
+    private readonly maxTake?: number
   ) {}
 
   /**
@@ -54,6 +56,10 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
       .query(primaryKey, depth, setHeaders, forbiddenFields)
       .then(async (query) => {
         if (where) query.where = mergeWhere ? { ...query.where, ...(where as object) } : where;
+
+        if (this.maxTake && query.take > this.maxTake) query.take = this.maxTake;
+
+        if (this.onQuery) query = this.onQuery({ ...query });
 
         if (setHeaders) {
           const count = await this.prisma[model].count({ where: query.where });
