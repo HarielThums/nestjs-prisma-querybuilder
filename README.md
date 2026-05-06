@@ -1,7 +1,7 @@
 # nestjs-prisma-querybuilder
 
-[![npm version](https://img.shields.io/npm/v/nestjs-prisma-querybuilder.svg)](https://www.npmjs.com/package/nestjs-prisma-querybuilder)
-[![license](https://img.shields.io/npm/l/nestjs-prisma-querybuilder.svg)](LICENSE)
+[npm version](https://www.npmjs.com/package/nestjs-prisma-querybuilder)
+[license](LICENSE)
 
 A query string parser for **NestJS + Prisma** that lets the frontend control pagination, sorting, filtering, field selection and relation population — all via URL parameters, keeping your API RESTful.
 
@@ -81,13 +81,14 @@ export class PostsService {
 ```
 
 `QuerybuilderService.query()` automatically:
+
 - Parses and validates the query string
 - Sets `count` and `page` response headers
 - Returns a `Partial<QueryResponse>` ready for `findMany`
 
 ### CORS
 
-If your project has CORS configured, add **`count`** and **`page`** to your `exposedHeaders` so the frontend can read them.
+If your project has CORS configured, add `**count**` and `**page**` to your `exposedHeaders` so the frontend can read them.
 
 ---
 
@@ -148,6 +149,55 @@ export class MyService {
 }
 ```
 
+## Strong typing for `model` and `where`
+
+`QuerybuilderService` is generic: `QuerybuilderService<TPrisma>`. This is **optional** — without it everything works as before, just loosely typed. When typed, `model` is autocompleted from your Prisma schema and `where` receives the correct type (e.g. `Prisma.PostWhereInput`).
+
+> **NestJS DI limitation**: TypeScript generics are erased at runtime, so the injector cannot carry the type parameter automatically. You must declare it explicitly on the constructor parameter.
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { QuerybuilderService, InjectQuerybuilder } from 'nestjs-prisma-querybuilder';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PostsService {
+  constructor(
+    private readonly qb: QuerybuilderService<PrismaClient>,
+    @InjectQuerybuilder('secondary') private readonly qb2: QuerybuilderService<PrismaClient>,
+  ) {}
+
+  async findAll() {
+    // 'model' autocompletes with your schema models
+    // 'where' is typed as Prisma.PostWhereInput
+    const query = await this.qb.query({ model: 'Post', where: { published: true } });
+    return this.prisma.post.findMany(query);
+  }
+}
+```
+
+## `forRootAsync` options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `prisma` | `Record<string, any>` | Your PrismaClient/PrismaService instance |
+| `maxTake` | `number` | Caps the `take` (limit) on every query — prevents clients from fetching unbounded rows |
+| `onQuery` | `(query) => query` | Hook called after every query build — use it to inject global `where`, force `orderBy`, audit logs, etc. |
+
+```typescript
+QuerybuilderModule.forRootAsync({
+  imports: [PrismaModule],
+  inject: [PrismaService],
+  useFactory: (prisma: PrismaService) => ({
+    prisma,
+    maxTake: 100,
+    onQuery: (query) => ({ ...query, where: { ...query.where, tenantId: 1 } }),
+  }),
+})
+```
+
+`onQuery` receives the fully built query object and must return the (optionally modified) query. It runs after `maxTake` and before the `count` query — so the response header reflects any global `where` injected by the hook.
+
 ---
 
 ## Advanced: custom wrapper
@@ -156,10 +206,11 @@ If you need logic that goes beyond what `QuerybuilderService` provides, you can 
 
 ```typescript
 // app.module.ts
-import { Querybuilder } from 'nestjs-prisma-querybuilder';
+import { QuerybuilderService } from './querybuilder.service.ts'
 
 @Module({
-  providers: [Querybuilder],
+  providers: [QuerybuilderService],
+  exports: [QuerybuilderService]
 })
 export class AppModule {}
 ```
@@ -229,8 +280,7 @@ export class QuerybuilderService {
 
 ## Query String Parameters
 
-<details>
-<summary>Example Prisma models used in the docs below</summary>
+Example Prisma models used in the docs below
 
 ```prisma
 model User {
@@ -263,8 +313,6 @@ model Content {
 }
 ```
 
-</details>
-
 ### Page and Limit
 
 Pagination is always enabled. If the consumer doesn't send `page` and `limit`, it defaults to page 1 with 10 items.
@@ -277,10 +325,12 @@ GET /posts?page=2&limit=10
 
 ### Sort
 
-| Property   | Required | Description |
-|------------|----------|-------------|
-| `field`    | yes      | The field to sort by |
+
+| Property   | Required | Description                      |
+| ---------- | -------- | -------------------------------- |
+| `field`    | yes      | The field to sort by             |
 | `criteria` | no       | `asc` or `desc` (default: `asc`) |
+
 
 ```
 GET /posts?sort[field]=title&sort[criteria]=desc
@@ -311,13 +361,15 @@ GET /posts?distinct=title published
 
 Populate is an array that lets you select specific fields from related models.
 
-| Property     | Required | Description |
-|--------------|----------|-------------|
-| `path`       | yes      | The relationship name (e.g. `author`) |
+
+| Property     | Required | Description                                                                                           |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------- |
+| `path`       | yes      | The relationship name (e.g. `author`)                                                                 |
 | `select`     | yes      | Fields to return (space/comma/semicolon separated). `select=all` is **not** supported inside populate |
-| `primaryKey` | no       | Primary key of the relation (default: `id`) |
-| `populate`   | no       | Nested populate for deeper relations |
-| `filter`     | no       | `FilterFields[]` to filter the related records |
+| `primaryKey` | no       | Primary key of the relation (default: `id`)                                                           |
+| `populate`   | no       | Nested populate for deeper relations                                                                  |
+| `filter`     | no       | `FilterFields[]` to filter the related records                                                        |
+
 
 Use the array index to link `path` and `select`:
 
@@ -343,16 +395,18 @@ When using `select=all` together with `populate`, the library uses Prisma's `inc
 
 Filter is an array that builds the Prisma `where` clause.
 
-| Property              | Required | Description |
-|-----------------------|----------|-------------|
-| `path`                | yes      | The field to filter on |
-| `value`               | yes*     | The value to filter by (*optional when using nested `filter`) |
-| `type`                | no       | Value type: `string` (default), `boolean`, `number`, `date`, `object`. The `object` type accepts `null` or `undefined` |
-| `operator`            | no       | Prisma operator: `contains`, `endsWith`, `startsWith`, `equals`, `gt`, `gte`, `in`, `lt`, `lte`, `not`, `notIn`, `hasEvery`, `hasSome`, `has`, `isEmpty` |
-| `filterGroup`         | no       | Groups filters with Prisma logical operators: `and`, `or`, `not` |
-| `insensitive`         | no       | `'true'` or `'false'` (default: `'false'`). See [Prisma case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity) |
-| `filter`              | no       | `FilterFields[]` for nested/relation filters |
-| `filterInsideOperator`| no       | Prisma relation operator for nested filters: `none`, `some`, `every` |
+
+| Property               | Required | Description                                                                                                                                                                                      |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`                 | yes      | The field to filter on                                                                                                                                                                           |
+| `value`                | yes*     | The value to filter by (*optional when using nested `filter`)                                                                                                                                    |
+| `type`                 | no       | Value type: `string` (default), `boolean`, `number`, `date`, `object`. The `object` type accepts `null` or `undefined`                                                                           |
+| `operator`             | no       | Prisma operator: `contains`, `endsWith`, `startsWith`, `equals`, `gt`, `gte`, `in`, `lt`, `lte`, `not`, `notIn`, `hasEvery`, `hasSome`, `has`, `isEmpty`                                         |
+| `filterGroup`          | no       | Groups filters with Prisma logical operators: `and`, `or`, `not`                                                                                                                                 |
+| `insensitive`          | no       | `'true'` or `'false'` (default: `'false'`). See [Prisma case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity) |
+| `filter`               | no       | `FilterFields[]` for nested/relation filters                                                                                                                                                     |
+| `filterInsideOperator` | no       | Prisma relation operator for nested filters: `none`, `some`, `every`                                                                                                                             |
+
 
 The operators `in`, `notIn`, `hasEvery` and `hasSome` accept multiple values separated by **comma or semicolon**:
 
@@ -469,8 +523,7 @@ You can use the companion package to build query strings more easily on the fron
 
 ---
 
-<details>
-<summary>Documentação em Português</summary>
+Documentação em Português
 
 ## nestjs-prisma-querybuilder
 
@@ -553,7 +606,7 @@ export class PostsService {
 
 #### CORS
 
-Se o seu projeto tem CORS configurado, adicione **`count`** e **`page`** ao `exposedHeaders` para que o frontend consiga ler esses headers.
+Se o seu projeto tem CORS configurado, adicione `**count**` e `**page**` ao `exposedHeaders` para que o frontend consiga ler esses headers.
 
 ---
 
@@ -600,6 +653,55 @@ constructor(
 ) {}
 ```
 
+### Tipagem forte para `model` e `where`
+
+`QuerybuilderService` é genérico: `QuerybuilderService<TPrisma>`. Isso é **opcional** — sem ele tudo funciona normalmente, apenas sem tipagem estrita. Quando tipado, `model` é autocompletado a partir do seu schema Prisma e `where` recebe o tipo correto (ex: `Prisma.PostWhereInput`).
+
+> **Limitação do DI do NestJS**: generics TypeScript são apagados em runtime, então o injector não consegue carregar o tipo parametrizado automaticamente. É necessário declará-lo explicitamente no parâmetro do constructor.
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { QuerybuilderService, InjectQuerybuilder } from 'nestjs-prisma-querybuilder';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PostsService {
+  constructor(
+    private readonly qb: QuerybuilderService<PrismaClient>,
+    @InjectQuerybuilder('secondary') private readonly qb2: QuerybuilderService<PrismaClient>,
+  ) {}
+
+  async findAll() {
+    // 'model' autocompleta com os models do seu schema
+    // 'where' é tipado como Prisma.PostWhereInput
+    const query = await this.qb.query({ model: 'Post', where: { published: true } });
+    return this.prisma.post.findMany(query);
+  }
+}
+```
+
+### Opções do `forRootAsync`
+
+| Opção | Tipo | Descrição |
+|-------|------|-----------|
+| `prisma` | `Record<string, any>` | Instância do PrismaClient/PrismaService |
+| `maxTake` | `number` | Limita o `take` (limit) em todas as queries — evita que clientes busquem linhas sem limite |
+| `onQuery` | `(query) => query` | Hook chamado após cada build de query — use para injetar `where` global, forçar `orderBy`, logs de auditoria, etc. |
+
+```typescript
+QuerybuilderModule.forRootAsync({
+  imports: [PrismaModule],
+  inject: [PrismaService],
+  useFactory: (prisma: PrismaService) => ({
+    prisma,
+    maxTake: 100,
+    onQuery: (query) => ({ ...query, where: { ...query.where, tenantId: 1 } }),
+  }),
+})
+```
+
+`onQuery` recebe o objeto de query já construído e deve retornar a query (opcionalmente modificada). Executa após o `maxTake` e antes da query de `count` — assim o header de total reflete qualquer `where` global injetado pelo hook.
+
 ---
 
 ### Avançado: wrapper customizado
@@ -608,10 +710,11 @@ Se precisar de lógica além do que `QuerybuilderService` oferece, injete `Query
 
 ```typescript
 // app.module.ts
-import { Querybuilder } from 'nestjs-prisma-querybuilder';
+import { QuerybuilderService } from './querybuilder.service.ts';
 
 @Module({
-  providers: [Querybuilder],
+  providers: [QuerybuilderService],
+  exports: [QuerybuilderService]
 })
 export class AppModule {}
 ```
@@ -681,8 +784,7 @@ export class QuerybuilderService {
 
 ### Parâmetros da Query String
 
-<details>
-<summary>Models Prisma de exemplo usados na documentação abaixo</summary>
+Models Prisma de exemplo usados na documentação abaixo
 
 ```prisma
 model User {
@@ -715,8 +817,6 @@ model Content {
 }
 ```
 
-</details>
-
 #### Page e Limit
 
 A paginação está sempre habilitada. Se não forem enviados `page` e `limit`, o padrão é página 1 com 10 itens.
@@ -729,10 +829,12 @@ GET /posts?page=2&limit=10
 
 #### Sort
 
-| Propriedade | Obrigatório | Descrição |
-|-------------|-------------|-----------|
-| `field`     | sim         | O campo para ordenar |
+
+| Propriedade | Obrigatório | Descrição                        |
+| ----------- | ----------- | -------------------------------- |
+| `field`     | sim         | O campo para ordenar             |
 | `criteria`  | não         | `asc` ou `desc` (default: `asc`) |
+
 
 ```
 GET /posts?sort[field]=title&sort[criteria]=desc
@@ -763,13 +865,15 @@ GET /posts?distinct=title published
 
 Populate é um array que permite selecionar campos específicos de modelos relacionados.
 
-| Propriedade  | Obrigatório | Descrição |
-|--------------|-------------|-----------|
-| `path`       | sim         | O nome do relacionamento (ex: `author`) |
+
+| Propriedade  | Obrigatório | Descrição                                                                                                             |
+| ------------ | ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| `path`       | sim         | O nome do relacionamento (ex: `author`)                                                                               |
 | `select`     | sim         | Campos a retornar (separados por espaço/vírgula/ponto e vírgula). `select=all` **não** é suportado dentro do populate |
-| `primaryKey` | não         | Chave primária da relação (default: `id`) |
-| `populate`   | não         | Populate aninhado para relações mais profundas |
-| `filter`     | não         | `FilterFields[]` para filtrar os registros relacionados |
+| `primaryKey` | não         | Chave primária da relação (default: `id`)                                                                             |
+| `populate`   | não         | Populate aninhado para relações mais profundas                                                                        |
+| `filter`     | não         | `FilterFields[]` para filtrar os registros relacionados                                                               |
+
 
 Use o índice do array para ligar `path` e `select`:
 
@@ -795,16 +899,18 @@ Ao usar `select=all` junto com `populate`, a biblioteca usa o `include` do Prism
 
 Filter é um array que constrói a cláusula `where` do Prisma.
 
-| Propriedade            | Obrigatório | Descrição |
-|------------------------|-------------|-----------|
-| `path`                 | sim         | O campo para filtrar |
-| `value`                | sim*        | O valor para filtrar (*opcional quando usando `filter` aninhado) |
-| `type`                 | não         | Tipo do valor: `string` (default), `boolean`, `number`, `date`, `object`. O tipo `object` aceita `null` ou `undefined` |
-| `operator`             | não         | Operador Prisma: `contains`, `endsWith`, `startsWith`, `equals`, `gt`, `gte`, `in`, `lt`, `lte`, `not`, `notIn`, `hasEvery`, `hasSome`, `has`, `isEmpty` |
-| `filterGroup`          | não         | Agrupa filtros com operadores lógicos do Prisma: `and`, `or`, `not` |
+
+| Propriedade            | Obrigatório | Descrição                                                                                                                                                                                         |
+| ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`                 | sim         | O campo para filtrar                                                                                                                                                                              |
+| `value`                | sim*        | O valor para filtrar (*opcional quando usando `filter` aninhado)                                                                                                                                  |
+| `type`                 | não         | Tipo do valor: `string` (default), `boolean`, `number`, `date`, `object`. O tipo `object` aceita `null` ou `undefined`                                                                            |
+| `operator`             | não         | Operador Prisma: `contains`, `endsWith`, `startsWith`, `equals`, `gt`, `gte`, `in`, `lt`, `lte`, `not`, `notIn`, `hasEvery`, `hasSome`, `has`, `isEmpty`                                          |
+| `filterGroup`          | não         | Agrupa filtros com operadores lógicos do Prisma: `and`, `or`, `not`                                                                                                                               |
 | `insensitive`          | não         | `'true'` ou `'false'` (default: `'false'`). Veja [Prisma case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity) |
-| `filter`               | não         | `FilterFields[]` para filtros aninhados/em relações |
-| `filterInsideOperator` | não         | Operador de relação do Prisma para filtros aninhados: `none`, `some`, `every` |
+| `filter`               | não         | `FilterFields[]` para filtros aninhados/em relações                                                                                                                                               |
+| `filterInsideOperator` | não         | Operador de relação do Prisma para filtros aninhados: `none`, `some`, `every`                                                                                                                     |
+
 
 Os operadores `in`, `notIn`, `hasEvery` e `hasSome` aceitam múltiplos valores separados por **vírgula ou ponto e vírgula**:
 
@@ -912,5 +1018,3 @@ Usar ambas as abordagens juntas garante defesa em profundidade: `forbiddenFields
 Você pode usar o pacote complementar para construir query strings mais facilmente no frontend:
 
 **[nestjs-prisma-querybuilder-interface](https://www.npmjs.com/package/nestjs-prisma-querybuilder-interface)**
-
-</details>
