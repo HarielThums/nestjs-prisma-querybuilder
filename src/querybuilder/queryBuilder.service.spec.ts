@@ -12,13 +12,16 @@ const makeQuerybuilder = (query: Record<string, any> = {}) => {
   return new Querybuilder(makeMockRequest(query) as Request);
 };
 
+type MockDelegate = { count: jest.Mock; findMany: (args?: { where?: Record<string, any> }) => Promise<any[]> };
+type MockPrisma = { Post: MockDelegate; User: MockDelegate };
+
 const makeService = (query: Record<string, any> = {}, prismaCount = 10) => {
   const qb = makeQuerybuilder(query);
-  const prisma = {
-    Post: { count: jest.fn().mockResolvedValue(prismaCount) },
-    User: { count: jest.fn().mockResolvedValue(prismaCount) }
+  const prisma: MockPrisma = {
+    Post: { count: jest.fn().mockResolvedValue(prismaCount), findMany: jest.fn().mockResolvedValue([]) },
+    User: { count: jest.fn().mockResolvedValue(prismaCount), findMany: jest.fn().mockResolvedValue([]) }
   };
-  const service = new QuerybuilderService(qb, prisma);
+  const service = new QuerybuilderService<MockPrisma>(qb, prisma);
   return { service, qb, prisma };
 };
 
