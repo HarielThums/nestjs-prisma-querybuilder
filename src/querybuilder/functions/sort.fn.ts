@@ -1,16 +1,17 @@
 /**
  * Builds the Prisma `orderBy` clause from the query sort parameter.
- * @param query - Query object containing an optional `sort` object with `field` and `criteria` ('asc'|'desc')
+ * Accepts a single sort object or an array for multi-column ordering.
+ * @param query - Query object containing an optional `sort` field
  * @param forbiddenFields - Field names that must be excluded from sorting
  * @returns The query object with `orderBy` populated and `sort` removed
  */
 export const sort = (query, forbiddenFields: string[]) => {
   if (query.sort) {
-    if (!forbiddenFields.includes(query.sort.field)) {
-      query.orderBy = {};
+    const sorts = Array.isArray(query.sort) ? query.sort : [query.sort];
 
-      query.orderBy[query.sort.field] = query.sort.criteria;
-    }
+    const orderBy = sorts.filter((s) => s.field && !forbiddenFields.includes(s.field)).map((s) => ({ [s.field]: s.criteria ?? 'asc' }));
+
+    if (orderBy.length) query.orderBy = orderBy.length === 1 ? orderBy[0] : orderBy;
 
     delete query.sort;
   }

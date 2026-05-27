@@ -42,5 +42,5 @@ export class QueryValidator {
   @Expose()
   @Type(() => SortFields)
   @ValidateNested({ each: true })
-  sort: SortFields;
+  sort: SortFields | SortFields[];
 }
