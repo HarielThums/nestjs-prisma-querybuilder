@@ -65,6 +65,7 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
           const count = await this.prisma[model].count({ where: query.where });
 
           this.querybuilder.request.res.setHeader('count', count);
+          if (this.maxTake != null) this.querybuilder.request.res.setHeader('maxtake', this.maxTake);
         }
 
         if (paginationOnly) {

@@ -83,12 +83,12 @@ export class PostsService {
 `QuerybuilderService.query()` automatically:
 
 - Parses and validates the query string
-- Sets `count` and `page` response headers
+- Sets `count`, `page`, and `maxtake` (when configured) response headers
 - Returns a `Partial<QueryResponse>` ready for `findMany`
 
 ### CORS
 
-If your project has CORS configured, add `**count**` and `**page**` to your `exposedHeaders` so the frontend can read them.
+If your project has CORS configured, add `**count**`, `**page**`, and `**maxtake**` to your `exposedHeaders` so the frontend can read them.
 
 ---
 
@@ -317,7 +317,7 @@ model Content {
 
 Pagination is always enabled. If the consumer doesn't send `page` and `limit`, it defaults to page 1 with 10 items.
 
-The response headers will contain `count` (total items) and `page` (current page number).
+The response headers will contain `count` (total items), `page` (current page number), and `maxtake` (the active cap, when `maxTake` is configured).
 
 ```
 GET /posts?page=2&limit=10
@@ -335,6 +335,14 @@ GET /posts?page=2&limit=10
 ```
 GET /posts?sort[field]=title&sort[criteria]=desc
 ```
+
+For multi-column ordering, pass `sort` as an indexed array:
+
+```
+GET /posts?sort[0][field]=publishedAt&sort[0][criteria]=desc&sort[1][field]=title&sort[1][criteria]=asc
+```
+
+This produces `orderBy: [{ publishedAt: 'desc' }, { title: 'asc' }]`. The single-object form remains fully supported.
 
 ### Select
 
@@ -606,7 +614,7 @@ export class PostsService {
 
 #### CORS
 
-Se o seu projeto tem CORS configurado, adicione `**count**` e `**page**` ao `exposedHeaders` para que o frontend consiga ler esses headers.
+Se o seu projeto tem CORS configurado, adicione `**count**`, `**page**` e `**maxtake**` ao `exposedHeaders` para que o frontend consiga ler esses headers.
 
 ---
 
@@ -839,6 +847,14 @@ GET /posts?page=2&limit=10
 ```
 GET /posts?sort[field]=title&sort[criteria]=desc
 ```
+
+Para ordenação por múltiplas colunas, passe `sort` como array indexado:
+
+```
+GET /posts?sort[0][field]=publishedAt&sort[0][criteria]=desc&sort[1][field]=title&sort[1][criteria]=asc
+```
+
+Isso gera `orderBy: [{ publishedAt: 'desc' }, { title: 'asc' }]`. O formato de objeto simples continua totalmente suportado.
 
 #### Select
 

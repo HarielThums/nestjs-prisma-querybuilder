@@ -185,5 +185,22 @@ describe('QuerybuilderService', () => {
 
       expect(result.take).toBe(10);
     });
+
+    it('should set maxtake response header when maxTake is defined and setHeaders=true', async () => {
+      const qb = makeQuerybuilder({ limit: '500' });
+      const service = new QuerybuilderService<MockPrisma>(qb, makePrisma(), undefined, 100);
+
+      await service.query({ model: 'Post', setHeaders: true });
+
+      expect(qb.request.res.setHeader).toHaveBeenCalledWith('maxtake', 100);
+    });
+
+    it('should not set maxtake header when maxTake is not defined', async () => {
+      const { service, qb } = makeService();
+
+      await service.query({ model: 'Post', setHeaders: true });
+
+      expect(qb.request.res.setHeader).not.toHaveBeenCalledWith('maxtake', expect.anything());
+    });
   });
 });
