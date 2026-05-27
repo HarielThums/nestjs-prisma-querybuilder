@@ -197,12 +197,12 @@ describe('QuerybuilderService', () => {
     });
   });
 
-  describe('maxTake', () => {
-    const makePrisma = (): MockPrisma => ({
-      Post: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
-      User: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) }
-    });
+  const makePrisma = (): MockPrisma => ({
+    Post: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+    User: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) }
+  });
 
+  describe('maxTake', () => {
     it('should cap take when it exceeds maxTake', async () => {
       const service = new QuerybuilderService<MockPrisma>(makeQuerybuilder({ limit: '500' }), makePrisma(), undefined, 100);
 
@@ -267,6 +267,40 @@ describe('QuerybuilderService', () => {
       await service.query({ model: 'Post', setHeaders: true, maxTake: 200 });
 
       expect(qb.request.res.setHeader).toHaveBeenCalledWith('maxtake', 200);
+    });
+  });
+
+  describe('tx', () => {
+    const makeTx = (count = 5): MockPrisma => ({
+      Post: { count: jest.fn().mockResolvedValue(count), findMany: jest.fn().mockResolvedValue([]) },
+      User: { count: jest.fn().mockResolvedValue(count), findMany: jest.fn().mockResolvedValue([]) }
+    });
+
+    it('should use tx.count instead of prisma.count when tx is passed and setHeaders=true', async () => {
+      const { service, prisma } = makeService();
+      const tx = makeTx(99);
+
+      await service.query({ model: 'Post', setHeaders: true, tx });
+
+      expect(tx.Post.count).toHaveBeenCalledWith({ where: {} });
+      expect(prisma.Post.count).not.toHaveBeenCalled();
+    });
+
+    it('should not call tx.count when setHeaders=false', async () => {
+      const { service } = makeService();
+      const tx = makeTx();
+
+      await service.query({ model: 'Post', setHeaders: false, tx });
+
+      expect(tx.Post.count).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to prisma.count when tx is not passed', async () => {
+      const { service, prisma } = makeService();
+
+      await service.query({ model: 'Post', setHeaders: true });
+
+      expect(prisma.Post.count).toHaveBeenCalled();
     });
   });
 });

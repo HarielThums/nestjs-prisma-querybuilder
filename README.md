@@ -106,7 +106,17 @@ await this.qb.query({
   forbiddenFields: ['password', 'refreshToken'], // fields stripped everywhere
   maxTake: 50,             // overrides instance maxTake for this call; 0 = no cap
   onQuery: (q) => q,       // overrides instance onQuery for this call; null = disable
+  tx,                      // transactional client — uses tx.count() instead of prisma.count()
 })
+```
+
+When running inside a `prisma.$transaction`, pass the `tx` client to keep the `count` header consistent with the transaction's snapshot:
+
+```typescript
+await this.prisma.$transaction(async (tx) => {
+  const query = await this.qb.query({ model: 'Post', tx, setHeaders: true });
+  return tx.post.findMany(query);
+});
 ```
 
 ---
@@ -641,7 +651,17 @@ await this.qb.query({
   forbiddenFields: ['password', 'refreshToken'],
   maxTake: 50,             // sobrescreve o maxTake da instância nesta chamada; 0 = sem limite
   onQuery: (q) => q,       // sobrescreve o onQuery da instância nesta chamada; null = desabilita
+  tx,                      // client transacional — usa tx.count() em vez de prisma.count()
 })
+```
+
+Ao rodar dentro de um `prisma.$transaction`, passe o client `tx` para manter o header `count` consistente com o snapshot da transação:
+
+```typescript
+await this.prisma.$transaction(async (tx) => {
+  const query = await this.qb.query({ model: 'Post', tx, setHeaders: true });
+  return tx.post.findMany(query);
+});
 ```
 
 ---

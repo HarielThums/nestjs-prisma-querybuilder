@@ -39,7 +39,8 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
     primaryKey = 'id',
     setHeaders = true,
     maxTake,
-    onQuery
+    onQuery,
+    tx
   }: {
     model: TModel;
     where?: WhereInput<TPrisma, TModel>;
@@ -51,6 +52,7 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
     forbiddenFields?: string[];
     maxTake?: number;
     onQuery?: ((query: Record<string, any>) => Record<string, any>) | null;
+    tx?: Partial<TPrisma>;
   }): Promise<Partial<QueryResponse>> {
     if (!this.prisma[model]) {
       throw new BadRequestException(`Model "${model}" not found in PrismaClient`);
@@ -70,7 +72,9 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
         if (effectiveOnQuery) query = effectiveOnQuery({ ...query });
 
         if (setHeaders) {
-          const count = await this.prisma[model].count({ where: query.where });
+          const client = tx ?? this.prisma;
+
+          const count = await client[model].count({ where: query.where });
 
           this.querybuilder.request.res.setHeader('count', count);
 
