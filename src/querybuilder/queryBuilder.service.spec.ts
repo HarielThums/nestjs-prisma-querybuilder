@@ -162,6 +162,39 @@ describe('QuerybuilderService', () => {
 
       expect(result.where).toStrictEqual({});
     });
+
+    it('should use per-call onQuery over instance onQuery', async () => {
+      const qb = makeQuerybuilder();
+      const prisma: MockPrisma = {
+        Post: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        User: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) }
+      };
+      const instanceOnQuery = jest.fn((q) => ({ ...q, where: { ...q.where, tenantId: 1 } }));
+      const callOnQuery = jest.fn((q) => ({ ...q, where: { ...q.where, active: true } }));
+      const service = new QuerybuilderService<MockPrisma>(qb, prisma, instanceOnQuery);
+
+      const result = await service.query({ model: 'Post', setHeaders: false, onQuery: callOnQuery });
+
+      expect(instanceOnQuery).not.toHaveBeenCalled();
+      expect(callOnQuery).toHaveBeenCalled();
+      expect(result.where).toMatchObject({ active: true });
+      expect(result.where).not.toMatchObject({ tenantId: 1 });
+    });
+
+    it('should disable instance onQuery when per-call onQuery is null', async () => {
+      const qb = makeQuerybuilder();
+      const prisma: MockPrisma = {
+        Post: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) },
+        User: { count: jest.fn().mockResolvedValue(0), findMany: jest.fn().mockResolvedValue([]) }
+      };
+      const instanceOnQuery = jest.fn((q) => ({ ...q, where: { ...q.where, tenantId: 1 } }));
+      const service = new QuerybuilderService<MockPrisma>(qb, prisma, instanceOnQuery);
+
+      const result = await service.query({ model: 'Post', setHeaders: false, onQuery: null });
+
+      expect(instanceOnQuery).not.toHaveBeenCalled();
+      expect(result.where).toStrictEqual({});
+    });
   });
 
   describe('maxTake', () => {
@@ -201,6 +234,39 @@ describe('QuerybuilderService', () => {
       await service.query({ model: 'Post', setHeaders: true });
 
       expect(qb.request.res.setHeader).not.toHaveBeenCalledWith('maxtake', expect.anything());
+    });
+
+    it('should use per-call maxTake over instance maxTake', async () => {
+      const service = new QuerybuilderService<MockPrisma>(makeQuerybuilder({ limit: '500' }), makePrisma(), undefined, 100);
+
+      const result = await service.query({ model: 'Post', setHeaders: false, maxTake: 200 });
+
+      expect(result.take).toBe(200);
+    });
+
+    it('should disable cap when per-call maxTake is 0', async () => {
+      const service = new QuerybuilderService<MockPrisma>(makeQuerybuilder({ limit: '500' }), makePrisma(), undefined, 100);
+
+      const result = await service.query({ model: 'Post', setHeaders: false, maxTake: 0 });
+
+      expect(result.take).toBe(500);
+    });
+
+    it('should use instance maxTake when per-call maxTake is not passed', async () => {
+      const service = new QuerybuilderService<MockPrisma>(makeQuerybuilder({ limit: '500' }), makePrisma(), undefined, 100);
+
+      const result = await service.query({ model: 'Post', setHeaders: false });
+
+      expect(result.take).toBe(100);
+    });
+
+    it('should set maxtake header reflecting per-call maxTake when setHeaders=true', async () => {
+      const qb = makeQuerybuilder({ limit: '500' });
+      const service = new QuerybuilderService<MockPrisma>(qb, makePrisma(), undefined, 100);
+
+      await service.query({ model: 'Post', setHeaders: true, maxTake: 200 });
+
+      expect(qb.request.res.setHeader).toHaveBeenCalledWith('maxtake', 200);
     });
   });
 });

@@ -37,7 +37,9 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
     paginationOnly,
     forbiddenFields,
     primaryKey = 'id',
-    setHeaders = true
+    setHeaders = true,
+    maxTake,
+    onQuery
   }: {
     model: TModel;
     where?: WhereInput<TPrisma, TModel>;
@@ -47,6 +49,8 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
     setHeaders?: boolean;
     paginationOnly?: boolean;
     forbiddenFields?: string[];
+    maxTake?: number;
+    onQuery?: ((query: Record<string, any>) => Record<string, any>) | null;
   }): Promise<Partial<QueryResponse>> {
     if (!this.prisma[model]) {
       throw new BadRequestException(`Model "${model}" not found in PrismaClient`);
@@ -57,15 +61,20 @@ export class QuerybuilderService<TPrisma extends Record<string, any> = Record<st
       .then(async (query) => {
         if (where) query.where = mergeWhere ? { ...query.where, ...(where as object) } : where;
 
-        if (this.maxTake && query.take > this.maxTake) query.take = this.maxTake;
+        const effectiveMaxTake = maxTake !== undefined ? maxTake : this.maxTake;
 
-        if (this.onQuery) query = this.onQuery({ ...query });
+        if (effectiveMaxTake && query.take > effectiveMaxTake) query.take = effectiveMaxTake;
+
+        const effectiveOnQuery = onQuery !== undefined ? onQuery : this.onQuery;
+
+        if (effectiveOnQuery) query = effectiveOnQuery({ ...query });
 
         if (setHeaders) {
           const count = await this.prisma[model].count({ where: query.where });
 
           this.querybuilder.request.res.setHeader('count', count);
-          if (this.maxTake != null) this.querybuilder.request.res.setHeader('maxtake', this.maxTake);
+
+          if (effectiveMaxTake !== null && !isNaN(effectiveMaxTake)) this.querybuilder.request.res.setHeader('maxtake', effectiveMaxTake);
         }
 
         if (paginationOnly) {

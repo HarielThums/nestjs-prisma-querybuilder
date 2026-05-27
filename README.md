@@ -100,10 +100,12 @@ await this.qb.query({
   primaryKey: 'id',        // primary key field (default: 'id')
   where: { authorId: 1 }, // extra where clause
   mergeWhere: true,        // true = merge with query string where, false = replace it
-  paginationOnly: false,     // true = strip select/include (count queries)
+  paginationOnly: false,   // true = strip select/include (count queries)
   setHeaders: true,        // false = skip count query and headers
   depth: 5,                // qs parse depth (default: 5)
   forbiddenFields: ['password', 'refreshToken'], // fields stripped everywhere
+  maxTake: 50,             // overrides instance maxTake for this call; 0 = no cap
+  onQuery: (q) => q,       // overrides instance onQuery for this call; null = disable
 })
 ```
 
@@ -197,6 +199,13 @@ QuerybuilderModule.forRootAsync({
 ```
 
 `onQuery` receives the fully built query object and must return the (optionally modified) query. It runs after `maxTake` and before the `count` query — so the response header reflects any global `where` injected by the hook.
+
+Both `maxTake` and `onQuery` can also be passed directly to `.query()` to override the instance-level value for a single call. Pass `maxTake: 0` to remove the cap, or `onQuery: null` to skip the hook:
+
+```typescript
+// no cap and no hook for this specific endpoint (e.g. an export)
+const query = await this.qb.query({ model: 'Post', maxTake: 0, onQuery: null });
+```
 
 ---
 
@@ -630,6 +639,8 @@ await this.qb.query({
   setHeaders: true,
   depth: 5,
   forbiddenFields: ['password', 'refreshToken'],
+  maxTake: 50,             // sobrescreve o maxTake da instância nesta chamada; 0 = sem limite
+  onQuery: (q) => q,       // sobrescreve o onQuery da instância nesta chamada; null = desabilita
 })
 ```
 
@@ -709,6 +720,13 @@ QuerybuilderModule.forRootAsync({
 ```
 
 `onQuery` recebe o objeto de query já construído e deve retornar a query (opcionalmente modificada). Executa após o `maxTake` e antes da query de `count` — assim o header de total reflete qualquer `where` global injetado pelo hook.
+
+Tanto `maxTake` quanto `onQuery` também podem ser passados diretamente no `.query()` para sobrescrever o valor da instância em uma única chamada. Use `maxTake: 0` para remover o limite, ou `onQuery: null` para desabilitar o hook:
+
+```typescript
+// sem limite e sem hook neste endpoint específico (ex: exportação)
+const query = await this.qb.query({ model: 'Post', maxTake: 0, onQuery: null });
+```
 
 ---
 
