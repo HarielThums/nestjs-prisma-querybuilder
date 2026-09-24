@@ -254,6 +254,79 @@ describe('filter', () => {
     });
   });
 
+  describe('not flag', () => {
+    it('should keep scalar value for "not" operator', () => {
+      const query = { filter: [{ path: 'title', value: 'draft', operator: 'not' }] };
+
+      const result = filter(query, []);
+
+      expect(result.where.title).toStrictEqual({ not: 'draft' });
+    });
+
+    it('should wrap operator clause in "not" when not is "true"', () => {
+      const query = { filter: [{ path: 'title', value: 'draft', operator: 'contains', not: 'true' }] };
+
+      const result = filter(query, []);
+
+      expect(result.where.title).toStrictEqual({ not: { contains: 'draft' } });
+    });
+
+    it('should not wrap when not is "false"', () => {
+      const query = { filter: [{ path: 'title', value: 'draft', operator: 'contains', not: 'false' }] };
+
+      const result = filter(query, []);
+
+      expect(result.where.title).toStrictEqual({ contains: 'draft' });
+    });
+
+    it('should place insensitive mode outside the "not" object', () => {
+      const query = { filter: [{ path: 'title', value: 'draft', operator: 'contains', not: 'true', insensitive: 'true' }] };
+
+      const result = filter(query, []);
+
+      expect(result.where.title).toStrictEqual({ not: { contains: 'draft' }, mode: 'insensitive' });
+    });
+
+    it('should negate plain equality when there is no operator', () => {
+      const query = { filter: [{ path: 'status', value: 'draft', not: 'true' }] };
+
+      const result = filter(query, []);
+
+      expect(result.where.status).toStrictEqual({ not: 'draft' });
+    });
+
+    it('should convert type and split lists inside "not"', () => {
+      const query = { filter: [{ path: 'age', value: '1;2', operator: 'in', not: 'true', type: 'number' }] };
+
+      const result = filter(query, []);
+
+      expect(result.where.age).toStrictEqual({ not: { in: [1, 2] } });
+    });
+
+    it('should support "not" inside a filterGroup', () => {
+      const query = {
+        filter: [
+          { path: 'title', value: 'draft', operator: 'contains', not: 'true', filterGroup: 'or' },
+          { path: 'status', value: 'published', filterGroup: 'or' }
+        ]
+      };
+
+      const result = filter(query, []);
+
+      expect(result.where.OR).toStrictEqual([{ title: { not: { contains: 'draft' } } }, { status: 'published' }]);
+    });
+
+    it('should support "not" inside a relation filter', () => {
+      const query = {
+        filter: [{ path: 'posts', filter: [{ path: 'title', value: 'x', operator: 'startsWith', not: 'true', filterInsideOperator: 'some' }] }]
+      };
+
+      const result = filter(query, []);
+
+      expect(result.where.posts).toStrictEqual({ some: { title: { not: { startsWith: 'x' } } } });
+    });
+  });
+
   describe('nested filters (filterInsideOperator)', () => {
     // filterInsideOperator is declared on the CHILD filter, defining how the parent relation is scoped.
     // e.g. posts where SOME are published → parent path='posts', child path='published' + filterInsideOperator='some'

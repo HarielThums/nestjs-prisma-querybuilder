@@ -80,6 +80,21 @@ const convertValue = (value: FilterFields) => {
   return filterConvertDataType({ ...value, value: value.value });
 };
 
+/**
+ * Builds the condition assigned to a field:
+ * - no operator: the plain value (`{ title: 'x' }`)
+ * - operator: `{ [operator]: value, mode? }`
+ * - `not: 'true'`: wraps the condition in Prisma's `not` — `{ not: { [operator]: value }, mode? }`
+ *   (`mode` is only valid on the outer filter, never inside `not`).
+ */
+const buildFieldClause = (value: FilterFields, insensitive?: { mode: string }) => {
+  const negate = value.not === 'true' && (value.operator || value.value !== undefined);
+
+  if (negate) return { not: value.operator ? { [value.operator]: value.value } : value.value, ...insensitive };
+
+  return value.operator ? { [value.operator]: value.value, ...insensitive } : value.value;
+};
+
 const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) => {
   if (forbiddenFields.includes(value.path)) return undefined;
 
@@ -90,18 +105,13 @@ const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) 
   if (value?.value || isListOperator(value?.operator)) value.value = convertValue(value);
 
   const insensitive = value.insensitive === 'true' ? { mode: 'insensitive' } : undefined;
+  const clause = buildFieldClause(value, insensitive);
 
   if (value?.filterGroup) {
-    if (value.operator) {
-      where[value.filterGroup.toUpperCase()]?.push({ [value.path]: { [value.operator]: value.value, ...insensitive } });
-    } else {
-      // `{}` only when there is nothing to match (relation parent carrying nested filters); falsy values (`false`, `0`, `null`) are kept
-      where[value.filterGroup.toUpperCase()]?.push({ [value.path]: value.value !== undefined ? value.value : {} });
-    }
-  } else if (value?.operator) {
-    where[value.path] = { [value.operator]: value?.value, ...insensitive };
+    // `{}` only when there is nothing to match (relation parent carrying nested filters); falsy values (`false`, `0`, `null`) are kept
+    where[value.filterGroup.toUpperCase()]?.push({ [value.path]: clause !== undefined ? clause : {} });
   } else {
-    where[value?.path] = value.value;
+    where[value?.path] = clause;
   }
 
   if (value?.filter?.length) {

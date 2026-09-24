@@ -356,6 +356,167 @@ describe('Querybuilder', () => {
         expect(result.select.posts.where).toStrictEqual({ published: true });
       });
     });
+
+    describe('filter not flag through a real query string', () => {
+      const queryFrom = (queryString: string, depth = 5) => qs.parse(queryString, { depth }) as any;
+
+      it('should build not clause from query string', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=title&filter[0][operator]=contains&filter[0][value]=draft&filter[0][not]=true');
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ title: { not: { contains: 'draft' } } });
+        expect(result).not.toHaveProperty('filter');
+      });
+
+      it('should keep mode outside not when insensitive=true', async () => {
+        mockRequest.query = queryFrom(
+          'filter[0][path]=title&filter[0][operator]=contains&filter[0][value]=draft&filter[0][not]=true&filter[0][insensitive]=true'
+        );
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ title: { not: { contains: 'draft' }, mode: 'insensitive' } });
+      });
+
+      it('should not wrap when not=false', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=title&filter[0][operator]=contains&filter[0][value]=draft&filter[0][not]=false');
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ title: { contains: 'draft' } });
+      });
+
+      it('should negate plain equality without operator', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=status&filter[0][value]=draft&filter[0][not]=true');
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ status: { not: 'draft' } });
+      });
+
+      it('should negate a falsy typed value inside a filterGroup', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=deletedAt&filter[0][value]=null&filter[0][type]=object&filter[0][not]=true&filter[0][filterGroup]=and');
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ AND: [{ deletedAt: { not: null } }] });
+      });
+
+      it('should convert typed list inside not', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=age&filter[0][operator]=in&filter[0][value]=1,2&filter[0][type]=number&filter[0][not]=true');
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ age: { not: { in: [1, 2] } } });
+      });
+
+      it('should combine not with filterGroup=or', async () => {
+        mockRequest.query = queryFrom(
+          'filter[0][path]=title&filter[0][operator]=contains&filter[0][value]=draft&filter[0][not]=true&filter[0][filterGroup]=or' +
+            '&filter[1][path]=status&filter[1][value]=published&filter[1][filterGroup]=or'
+        );
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ OR: [{ title: { not: { contains: 'draft' } } }, { status: 'published' }] });
+      });
+
+      it('should apply not inside a relation filter with filterInsideOperator', async () => {
+        mockRequest.query = queryFrom(
+          'filter[0][path]=posts&filter[0][filter][0][path]=title&filter[0][filter][0][operator]=startsWith' +
+            '&filter[0][filter][0][value]=x&filter[0][filter][0][not]=true&filter[0][filter][0][filterInsideOperator]=some'
+        );
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ posts: { some: { title: { not: { startsWith: 'x' } } } } });
+      });
+
+      it('should apply not inside a populate filter', async () => {
+        mockRequest.query = queryFrom(
+          'populate[0][path]=posts&populate[0][select]=title&populate[0][filter][0][path]=title&populate[0][filter][0][value]=x' +
+            '&populate[0][filter][0][operator]=contains&populate[0][filter][0][not]=true'
+        );
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.select.posts.where).toStrictEqual({ title: { not: { contains: 'x' } } });
+      });
+
+      it('should accept a valid filter three levels deep with not=true (needs depth > 5)', async () => {
+        mockRequest.query = queryFrom(
+          'filter[0][path]=author&filter[0][filter][0][path]=posts&filter[0][filter][0][filter][0][path]=title' +
+            '&filter[0][filter][0][filter][0][value]=x&filter[0][filter][0][filter][0][operator]=contains&filter[0][filter][0][filter][0][not]=true' +
+            '&filter[0][filter][0][filter][0][filterInsideOperator]=some',
+          10
+        );
+
+        const result = await queryBuilder.query('id', 10, false);
+
+        expect(result.where).toStrictEqual({ author: { posts: { some: { title: { not: { contains: 'x' } } } } } });
+      });
+
+      it('should strip a forbidden field even when negated', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=secret&filter[0][value]=x&filter[0][not]=true&filter[1][path]=ok&filter[1][value]=y');
+
+        const result = await queryBuilder.query('id', 5, false, ['secret']);
+
+        expect(result.where).toStrictEqual({ ok: 'y' });
+      });
+
+      it('should accept an empty not and treat it as unset', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=title&filter[0][operator]=contains&filter[0][value]=draft&filter[0][not]=');
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.where).toStrictEqual({ title: { contains: 'draft' } });
+      });
+
+      it.each([['1'], ['yes'], ['TRUE'], ['null']])('should reject not=%s with a descriptive message', async (not) => {
+        mockRequest.query = queryFrom(`filter[0][path]=title&filter[0][operator]=contains&filter[0][value]=draft&filter[0][not]=${not}`);
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toMatchObject({
+          response: { statusCode: 400, message: expect.arrayContaining([expect.stringMatching(/^not must be one of/)]) }
+        });
+      });
+
+      it.each([['has'], ['hasEvery'], ['hasSome'], ['isEmpty']])('should reject not=true combined with list operator %s', async (operator) => {
+        mockRequest.query = queryFrom(`filter[0][path]=tags&filter[0][operator]=${operator}&filter[0][value]=a&filter[0][not]=true`);
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toMatchObject({
+          response: { statusCode: 400, message: expect.arrayContaining([expect.stringMatching(/^not cannot be combined with operator/)]) }
+        });
+      });
+
+      it('should reject not=true on a relation parent that has no value', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=author&filter[0][not]=true&filter[0][filter][0][path]=name&filter[0][filter][0][value]=bob');
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toMatchObject({
+          response: { statusCode: 400, message: expect.arrayContaining(['not requires a value']) }
+        });
+      });
+
+      it('should reject an invalid not inside a nested filter', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=posts&filter[0][filter][0][path]=title&filter[0][filter][0][value]=x&filter[0][filter][0][not]=maybe');
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('should reject an invalid not inside a populate filter', async () => {
+        mockRequest.query = queryFrom(
+          'populate[0][path]=posts&populate[0][select]=title&populate[0][filter][0][path]=title&populate[0][filter][0][value]=x&populate[0][filter][0][not]=maybe'
+        );
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('should still reject an unknown operator when not=true', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=title&filter[0][operator]=notContains&filter[0][value]=x&filter[0][not]=true');
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toBeInstanceOf(BadRequestException);
+      });
+    });
   });
 
   describe('integration', () => {

@@ -431,6 +431,7 @@ Filter is an array that builds the Prisma `where` clause.
 | `operator`             | no       | Prisma operator: `contains`, `endsWith`, `startsWith`, `equals`, `gt`, `gte`, `in`, `lt`, `lte`, `not`, `notIn`, `hasEvery`, `hasSome`, `has`, `isEmpty`                                         |
 | `filterGroup`          | no       | Groups filters with Prisma logical operators: `and`, `or`, `not`                                                                                                                                 |
 | `insensitive`          | no       | `'true'` or `'false'` (default: `'false'`). See [Prisma case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity) |
+| `not`                  | no       | `'true'` or `'false'` (default: `'false'`). Wraps the field condition in Prisma's `not: { ... }`. Unlike `filterGroup=not`, it works together with `filterGroup=and`/`or`                              |
 | `filter`               | no       | `FilterFields[]` for nested/relation filters                                                                                                                                                     |
 | `filterInsideOperator` | no       | Prisma relation operator for nested filters: `none`, `some`, `every`                                                                                                                             |
 
@@ -439,6 +440,16 @@ The operators `in`, `notIn`, `hasEvery` and `hasSome` accept multiple values sep
 
 ```
 GET /posts?filter[0][path]=title&filter[0][operator]=in&filter[0][value]=foo,bar,baz
+```
+
+`not=true` negates the operator (or the plain equality when there is no operator), producing Prisma's `not: { ... }`. `insensitive` still applies (`mode` stays on the outer filter, as Prisma requires). It requires a `value` and cannot be combined with the scalar-list operators `has`, `hasEvery`, `hasSome` and `isEmpty`, because Prisma list filters have no `not`:
+
+```
+GET /posts?filter[0][path]=title&filter[0][operator]=contains&filter[0][value]=draft&filter[0][not]=true&filter[0][insensitive]=true
+```
+
+```json
+{ "where": { "title": { "not": { "contains": "draft" }, "mode": "insensitive" } } }
 ```
 
 Simple filters:
@@ -964,6 +975,7 @@ Filter é um array que constrói a cláusula `where` do Prisma.
 | `operator`             | não         | Operador Prisma: `contains`, `endsWith`, `startsWith`, `equals`, `gt`, `gte`, `in`, `lt`, `lte`, `not`, `notIn`, `hasEvery`, `hasSome`, `has`, `isEmpty`                                          |
 | `filterGroup`          | não         | Agrupa filtros com operadores lógicos do Prisma: `and`, `or`, `not`                                                                                                                               |
 | `insensitive`          | não         | `'true'` ou `'false'` (default: `'false'`). Veja [Prisma case sensitivity](https://www.prisma.io/docs/concepts/components/prisma-client/case-sensitivity#database-collation-and-case-sensitivity) |
+| `not`                  | não         | `'true'` ou `'false'` (default: `'false'`). Envolve a condição do campo no `not: { ... }` do Prisma. Diferente de `filterGroup=not`, funciona junto com `filterGroup=and`/`or`                       |
 | `filter`               | não         | `FilterFields[]` para filtros aninhados/em relações                                                                                                                                               |
 | `filterInsideOperator` | não         | Operador de relação do Prisma para filtros aninhados: `none`, `some`, `every`                                                                                                                     |
 
@@ -972,6 +984,16 @@ Os operadores `in`, `notIn`, `hasEvery` e `hasSome` aceitam múltiplos valores s
 
 ```
 GET /posts?filter[0][path]=title&filter[0][operator]=in&filter[0][value]=foo,bar,baz
+```
+
+`not=true` nega o operador (ou a igualdade simples, quando não há operador), gerando o `not: { ... }` do Prisma. O `insensitive` continua valendo (o `mode` fica no filtro externo, como o Prisma exige). Exige um `value` e não pode ser combinado com os operadores de lista escalar `has`, `hasEvery`, `hasSome` e `isEmpty`, porque filtros de lista do Prisma não têm `not`:
+
+```
+GET /posts?filter[0][path]=title&filter[0][operator]=contains&filter[0][value]=draft&filter[0][not]=true&filter[0][insensitive]=true
+```
+
+```json
+{ "where": { "title": { "not": { "contains": "draft" }, "mode": "insensitive" } } }
 ```
 
 Filtros simples:
