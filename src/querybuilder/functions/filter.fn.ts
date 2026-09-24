@@ -1,3 +1,4 @@
+import { LIST_OPERATORS } from '../constants/filter.constants';
 import { FilterFields } from '../dto/filterFields.dto';
 
 /**
@@ -72,7 +73,7 @@ const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) 
 
   const insensitive = value.insensitive === 'true' ? { mode: 'insensitive' } : undefined;
 
-  if (value?.operator && ['in', 'notIn', 'hasEvery', 'hasSome'].includes(value.operator)) {
+  if (value?.operator && (LIST_OPERATORS as readonly string[]).includes(value.operator)) {
     value.value = String(value.value)
       .split(/;|,/g)
       .map((v) => v.trim())

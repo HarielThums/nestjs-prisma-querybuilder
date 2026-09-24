@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
+import { FILTER_OPERATORS, FilterOperator } from '../constants/filter.constants';
 
 export class FilterFields {
   @Expose()
@@ -25,9 +26,9 @@ export class FilterFields {
   insensitive: 'true' | 'false';
 
   @Expose()
-  @IsEnum(['contains', 'endsWith', 'startsWith', 'equals', 'gt', 'gte', 'in', 'lt', 'lte', 'not', 'notIn', 'hasEvery', 'hasSome', 'has', 'isEmpty'])
+  @IsEnum(FILTER_OPERATORS)
   @IsOptional()
-  operator: typeOperator;
+  operator: FilterOperator;
 
   @Expose()
   @IsEnum(['and', 'not', 'or'])
@@ -43,20 +44,3 @@ export class FilterFields {
   @IsOptional()
   filterInsideOperator: 'none' | 'some' | 'every';
 }
-
-type typeOperator =
-  | 'contains'
-  | 'endsWith'
-  | 'startsWith'
-  | 'equals'
-  | 'gt'
-  | 'gte'
-  | 'in'
-  | 'lt'
-  | 'lte'
-  | 'not'
-  | 'notIn'
-  | 'hasEvery'
-  | 'hasSome'
-  | 'has'
-  | 'isEmpty';
