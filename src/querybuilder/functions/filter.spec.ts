@@ -180,6 +180,20 @@ describe('filter', () => {
       expect(result.where.NOT[0]).toStrictEqual({ status: 'banned' });
     });
 
+    it('should keep a converted falsy value inside filterGroup', () => {
+      const query = {
+        filter: [
+          { path: 'active', value: 'false', type: 'boolean', filterGroup: 'or' },
+          { path: 'count', value: '0', type: 'number', filterGroup: 'or' },
+          { path: 'deletedAt', value: 'null', type: 'object', filterGroup: 'or' }
+        ]
+      };
+
+      const result = filter(query, []);
+
+      expect(result.where.OR).toStrictEqual([{ active: false }, { count: 0 }, { deletedAt: null }]);
+    });
+
     it('should not add forbidden fields inside filterGroup', () => {
       const query = {
         filter: [

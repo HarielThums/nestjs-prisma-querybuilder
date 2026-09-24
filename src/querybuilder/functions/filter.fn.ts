@@ -95,7 +95,8 @@ const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) 
     if (value.operator) {
       where[value.filterGroup.toUpperCase()]?.push({ [value.path]: { [value.operator]: value.value, ...insensitive } });
     } else {
-      where[value.filterGroup.toUpperCase()]?.push({ [value.path]: value?.value ? value.value : {} });
+      // `{}` only when there is nothing to match (relation parent carrying nested filters); falsy values (`false`, `0`, `null`) are kept
+      where[value.filterGroup.toUpperCase()]?.push({ [value.path]: value.value !== undefined ? value.value : {} });
     }
   } else if (value?.operator) {
     where[value.path] = { [value.operator]: value?.value, ...insensitive };
