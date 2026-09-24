@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateIf, ValidateNested } from 'class-validator';
 import { FILTER_OPERATORS, FilterOperator } from '../constants/filter.constants';
 
 export class FilterFields {
@@ -37,6 +37,8 @@ export class FilterFields {
 
   @Expose()
   @Type(() => FilterFields)
+  @ValidateNested({ each: true })
+  @IsOptional()
   filter: FilterFields[];
 
   @Expose()

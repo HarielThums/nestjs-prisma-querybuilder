@@ -454,6 +454,8 @@ Using `filterGroup`:
 GET /posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[0][filterGroup]=and&filter[1][path]=published&filter[1][value]=true&filter[1][type]=boolean&filter[1][filterGroup]=and
 ```
 
+Nested filters (`filter[…][filter]` and `populate[…][filter]`) are validated with the same rules as top-level filters: an invalid operator, type or flag at any depth returns `400`.
+
 **Nested filter** (filter on related models):
 
 ```
@@ -984,6 +986,8 @@ Usando `filterGroup`:
 ```
 GET /posts?filter[0][path]=title&filter[0][value]=querybuilder&filter[0][filterGroup]=and&filter[1][path]=published&filter[1][value]=true&filter[1][type]=boolean&filter[1][filterGroup]=and
 ```
+
+Filtros aninhados (`filter[…][filter]` e `populate[…][filter]`) são validados com as mesmas regras dos filtros de primeiro nível: operador, tipo ou flag inválidos em qualquer profundidade retornam `400`.
 
 **Filtro aninhado** (filtrar em modelos relacionados):
 

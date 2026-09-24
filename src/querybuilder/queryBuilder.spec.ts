@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { Request } from 'express';
+import * as qs from 'qs';
 import { Querybuilder } from './queryBuilder';
 
 describe('Querybuilder', () => {
@@ -291,6 +292,69 @@ describe('Querybuilder', () => {
       mockRequest.query = { filter: [{ path: 'name', value: 'x', operator: 'INVALID_OP' }] } as any;
 
       await expect(queryBuilder.query()).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    describe('nested filter validation through a real query string', () => {
+      const queryFrom = (queryString: string, depth = 5) => qs.parse(queryString, { depth }) as any;
+
+      it('should reject an unknown operator inside a nested filter', async () => {
+        mockRequest.query = queryFrom(
+          'filter[0][path]=posts&filter[0][filter][0][path]=title&filter[0][filter][0][value]=x&filter[0][filter][0][operator]=INVALID'
+        );
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('should reject a missing path two levels deep', async () => {
+        mockRequest.query = queryFrom('filter[0][path]=author&filter[0][filter][0][path]=posts&filter[0][filter][0][filter][0][value]=x', 10);
+
+        await expect(queryBuilder.query('id', 10, false)).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('should accept a valid filter three levels deep when depth is raised', async () => {
+        mockRequest.query = queryFrom(
+          'filter[0][path]=author&filter[0][filter][0][path]=posts&filter[0][filter][0][filter][0][path]=title' +
+            '&filter[0][filter][0][filter][0][value]=x&filter[0][filter][0][filter][0][filterInsideOperator]=some',
+          10
+        );
+
+        const result = await queryBuilder.query('id', 10, false);
+
+        expect(result.where).toStrictEqual({ author: { posts: { some: { title: 'x' } } } });
+      });
+
+      it('should reject the same three-level filter with the default depth (path collapses into a literal key)', async () => {
+        mockRequest.query = queryFrom(
+          'filter[0][path]=author&filter[0][filter][0][path]=posts&filter[0][filter][0][filter][0][path]=title&filter[0][filter][0][filter][0][value]=x',
+          10
+        );
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('should reject an unknown operator inside a populate filter', async () => {
+        mockRequest.query = queryFrom(
+          'populate[0][path]=posts&populate[0][select]=title&populate[0][filter][0][path]=title&populate[0][filter][0][value]=x&populate[0][filter][0][operator]=INVALID'
+        );
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('should reject a missing select inside a nested populate', async () => {
+        mockRequest.query = queryFrom('populate[0][path]=posts&populate[0][select]=title&populate[0][populate][0][path]=comments');
+
+        await expect(queryBuilder.query('id', 5, false)).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('should accept a valid populate filter', async () => {
+        mockRequest.query = queryFrom(
+          'populate[0][path]=posts&populate[0][select]=title&populate[0][filter][0][path]=published&populate[0][filter][0][value]=true&populate[0][filter][0][type]=boolean'
+        );
+
+        const result = await queryBuilder.query('id', 5, false);
+
+        expect(result.select.posts.where).toStrictEqual({ published: true });
+      });
     });
   });
 
