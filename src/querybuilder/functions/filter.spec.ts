@@ -230,6 +230,14 @@ describe('filter', () => {
 
       expect(result.where.tags).toStrictEqual({ hasSome: ['x', 'y'] });
     });
+
+    it('should convert each item when list operator is combined with type', () => {
+      const query = { filter: [{ path: 'age', value: '1,2', type: 'number', operator: 'in' }] };
+
+      const result = filter(query, []);
+
+      expect(result.where.age).toStrictEqual({ in: [1, 2] });
+    });
   });
 
   describe('nested filters (filterInsideOperator)', () => {

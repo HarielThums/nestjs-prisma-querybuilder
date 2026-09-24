@@ -62,6 +62,24 @@ const filterConvertDataType = (value: FilterFields) => {
   return value.value;
 };
 
+const isListOperator = (operator?: string) => !!operator && (LIST_OPERATORS as readonly string[]).includes(operator);
+
+/**
+ * Converts `value.value` according to `value.type`.
+ * List operators (`in`, `notIn`, `hasEvery`, `hasSome`) split on comma/semicolon and convert each item.
+ */
+const convertValue = (value: FilterFields) => {
+  if (isListOperator(value.operator)) {
+    return String(value.value ?? '')
+      .split(/;|,/g)
+      .map((v) => v.trim())
+      .filter((v) => v)
+      .map((v) => filterConvertDataType({ ...value, value: v }));
+  }
+
+  return filterConvertDataType({ ...value, value: value.value });
+};
+
 const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) => {
   if (forbiddenFields.includes(value.path)) return undefined;
 
@@ -69,17 +87,9 @@ const whereAddFilters = (value: FilterFields, where, forbiddenFields: string[]) 
   if (!where['NOT']) where['NOT'] = [];
   if (!where['AND']) where['AND'] = [];
 
-  if (value?.value) value.value = filterConvertDataType(value);
+  if (value?.value || isListOperator(value?.operator)) value.value = convertValue(value);
 
   const insensitive = value.insensitive === 'true' ? { mode: 'insensitive' } : undefined;
-
-  if (value?.operator && (LIST_OPERATORS as readonly string[]).includes(value.operator)) {
-    value.value = String(value.value)
-      .split(/;|,/g)
-      .map((v) => v.trim())
-      .filter((v) => v)
-      .map((v) => filterConvertDataType({ ...value, value: v }));
-  }
 
   if (value?.filterGroup) {
     if (value.operator) {
